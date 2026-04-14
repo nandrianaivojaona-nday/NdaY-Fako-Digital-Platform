@@ -1,8 +1,4 @@
-// lib/roles.ts
-
 import { Role, AppUser } from "@/types/user";
-
-
 
 // ==============================
 // Role constants (values)
@@ -15,8 +11,6 @@ export const ROLES = {
   COLLECTOR: "COLLECTOR" as Role,
   CITIZEN: "CITIZEN" as Role,
 };
-
-
 
 // ==============================
 // Helpers
@@ -42,8 +36,6 @@ export function isCitizen(user?: AppUser | null) {
   return user?.role === ROLES.CITIZEN;
 }
 
-
-
 // ==============================
 // Access checks
 // ==============================
@@ -66,8 +58,6 @@ export function canAccessOperator(
   return false;
 }
 
-
-
 export function canAccessMunicipality(
   user?: AppUser | null,
   municipalityId?: string
@@ -85,8 +75,6 @@ export function canAccessMunicipality(
 
   return false;
 }
-
-
 
 export function canAccessCollector(
   user?: AppUser | null,

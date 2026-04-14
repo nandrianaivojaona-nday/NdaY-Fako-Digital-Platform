@@ -1,0 +1,290 @@
+@import "tailwindcss";
+
+
+/* ======================
+   BASE
+====================== */
+
+@layer base {
+
+  html,
+  body {
+    height: 100%;
+    margin: 0;
+    font-family: system-ui, Arial, sans-serif;
+  }
+
+}
+
+
+/* ======================
+   COMPONENTS
+====================== */
+
+@layer components {
+
+  .app-root {
+    min-height: 100vh;
+    background-image: url("/assets/flyers/nday-fako-flyer.png");
+    background-size: cover;
+    background-position: center;
+  }
+
+  .app-overlay {
+    position: relative;
+    min-height: 100vh;
+  
+    background: linear-gradient(
+      180deg,
+      rgba(3, 28, 18, 0.95) 0%,     /* Deep forest green (top) */
+      rgba(6, 64, 43, 0.85) 35%,    /* Rich ecosystem green */
+      rgba(13, 148, 136, 0.55) 70%, /* Teal (your brand color) */
+      rgba(13, 148, 136, 0.25) 100% /* Light transparent */
+    );
+  
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  
+    padding: 60px 20px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .page-container {
+    max-width: 1200px;
+    margin: auto;
+  
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+  }
+
+  .section {
+    margin-top: 40px;
+    color: white;
+  }
+
+  .header {
+    text-align: center;
+    color: white;
+    margin-bottom: 30px;
+  }
+
+  .header h1 {
+    font-size: 3rem;
+  }
+
+  .header-logo {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+  }
+  
+  @media (max-width: 900px) {
+    .grid-3 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  
+  @media (max-width: 640px) {
+    .grid-3 {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+
+  .card {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(14px);
+  
+    border-radius: 18px;
+    padding: 22px;
+  
+    border: 1px solid rgba(34, 197, 94, 0.2);
+  
+    box-shadow:
+      0 10px 40px rgba(0,0,0,0.4),
+      inset 0 0 0 1px rgba(255,255,255,0.05);
+  
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden; /* clips the functionalities overlay */
+  }
+  
+  .card:hover {
+    transform: translateY(-6px) scale(1.02);
+  }
+
+  .card-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  
+  .card-icon {
+    flex-shrink: 0;
+    color: #bbf7d0;
+    filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.35));
+  }
+  
+  .card h3 {
+    margin: 0;
+  }
+
+  /* The container for core functionalities */
+  .card-details {
+    position: absolute;
+    inset: 0;
+    background: rgba(13, 148, 136, 0.98); /* Slightly more opaque for readability */
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* Changed from center to allow scrolling from top */
+    
+    /* SCROLL LOGIC */
+    overflow-y: auto; 
+    max-height: 100%;
+    
+    opacity: 0;
+    transform: translateY(100%);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 10;
+  }
+  
+  /* Custom Scrollbar for the Hover Card */
+  .card-details::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .card-details::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
+  .card-details::-webkit-scrollbar-thumb {
+    background: #bbf7d0; /* Matches your icon color */
+    border-radius: 10px;
+  }
+
+.card:hover .card-details {
+  opacity: 1;
+  transform: translateY(0); /* Slide up on hover */
+}
+
+.card-details h4 {
+  color: #bbf7d0;
+  margin-bottom: 8px;
+  font-size: 1.1rem;
+}
+
+.card-details ul {
+  list-style: none;
+  padding: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.card-details li {
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+  
+  .icon-card {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(10px);
+    border-radius: 14px;
+    padding: 12px;
+  }
+
+  .icon-card img {
+    filter: drop-shadow(0 0 10px rgba(0,255,120,0.4));
+  }
+
+  .button {
+    display: inline-block;
+    padding: 10px 16px;
+    border-radius: 8px;
+    background: #0d9488;
+    color: white;
+    text-decoration: none;
+    margin-top: 10px;
+    border: none;
+    cursor: pointer;
+  }
+
+  .button:hover {
+    background: #0f766e;
+  }
+
+}
+.section-block {
+  padding: 30px;
+  border-radius: 20px;
+
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(6px);
+
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 20px 0;
+}
+
+.tab {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #ffffff55;
+  background: transparent;
+  color: white;
+  cursor: pointer;
+}
+
+.tab:hover {
+  background: #ffffff22;
+}
+
+.tab.active {
+  background: #ffffff33;
+  border-color: white;
+}
+
+.title {
+  font-size: 3.8rem;
+  font-weight: 700;
+  text-align: center;
+
+  color: #ffffff;
+
+  text-shadow:
+    0 0 20px rgba(34, 197, 94, 0.4),
+    0 0 40px rgba(13, 148, 136, 0.3);
+}
+
+.subtitle {
+  text-align: center;
+  opacity: 0.85;
+  margin-top: 10px;
+}
+
+.impact-card {
+  text-align: center;
+
+  background: linear-gradient(
+    135deg,
+    rgba(34, 197, 94, 0.25),
+    rgba(13, 148, 136, 0.25)
+  );
+
+  font-size: 1.2rem;
+}

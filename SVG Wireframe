@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <style>
+    .bg { fill: #f7fafc; }
+    .box { fill: #ffffff; stroke: #2b6cb0; stroke-width:2; rx:8; }
+    .box-accent { fill:#e6fffa; stroke:#2c7a7b; stroke-width:2; rx:8; }
+    .box-warn { fill:#fffaf0; stroke:#dd6b20; stroke-width:2; rx:8; }
+    .title { font: 700 18px/1.2 "Arial"; fill:#1a202c; }
+    .label { font: 600 13px/1.2 "Arial"; fill:#2d3748; }
+    .small { font: 500 11px/1.2 "Arial"; fill:#4a5568; }
+    .connector { stroke:#718096; stroke-width:2; fill:none; marker-end:url(#arrow); }
+  </style>
+
+  <rect class="bg" x="0" y="0" width="1200" height="800"/>
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#718096"/>
+    </marker>
+  </defs>
+
+  <!-- Top Presentation -->
+  <rect class="box" x="60" y="30" width="1080" height="80"/>
+  <text class="title" x="80" y="60">Next.js PWA Citizen App · Operator Dashboard · Setup Wizard</text>
+  <text class="small" x="80" y="80">SSR/SSG · PWA offline · Multilingual</text>
+
+  <!-- Setup Wizard -->
+  <rect class="box-accent" x="60" y="130" width="300" height="120"/>
+  <text class="label" x="80" y="160">Setup Wizard</text>
+  <text class="small" x="80" y="180">Create operatorId · Sites · Bins · Roles</text>
+  <text class="small" x="80" y="200">Choose Integration Mode: NdaY'WMS or External API</text>
+
+  <!-- Native Path -->
+  <rect class="box" x="60" y="270" width="300" height="120"/>
+  <text class="label" x="80" y="300">NdaY'WMS Dashboard</text>
+  <text class="small" x="80" y="320">Tenant scoped UI for collectors, supervisors</text>
+  <text class="small" x="80" y="340">Writes to Firestore</text>
+
+  <!-- Firestore -->
+  <rect class="box-warn" x="60" y="400" width="300" height="80"/>
+  <text class="label" x="80" y="435">Firestore</text>
+  <text class="small" x="80" y="455">Tenant collections · Offline sync</text>
+
+  <!-- External Path -->
+  <rect class="box" x="840" y="130" width="300" height="80"/>
+  <text class="label" x="860" y="160">External Operator WMS</text>
+  <text class="small" x="860" y="180">OpenAPI / Webhooks / REST</text>
+
+  <!-- OpenAPI Adapter Cluster -->
+  <rect class="box-accent" x="540" y="130" width="260" height="120"/>
+  <text class="label" x="560" y="160">OpenAPI Adapter</text>
+  <text class="small" x="560" y="180">Import OpenAPI · Map fields · Transform</text>
+  <text class="small" x="560" y="200">Test Harness · Generate Adapter Config</text>
+
+  <!-- Field Mapping UI -->
+  <rect class="box" x="420" y="270" width="360" height="120"/>
+  <text class="label" x="440" y="300">Field Mapping UI</text>
+  <text class="small" x="440" y="320">Status mapping · Transform functions · Geo parsing</text>
+  <text class="small" x="440" y="340">Preview canonical payload</text>
+
+  <!-- Test Harness -->
+  <rect class="box" x="420" y="400" width="360" height="80"/>
+  <text class="label" x="440" y="430">Test Harness</text>
+  <text class="small" x="440" y="450">Dry run · Validation logs · Webhook test</text>
+
+  <!-- API Gateway -->
+  <rect class="box" x="360" y="520" width="480" height="80"/>
+  <text class="label" x="380" y="555">API Gateway GraphQL / REST</text>
+  <text class="small" x="380" y="575">Auth · Rate limits · Routing</text>
+
+  <!-- Unified Backend Services -->
+  <rect class="box" x="120" y="620" width="320" height="120"/>
+  <text class="label" x="140" y="650">Node.js Scheduling Service</text>
+  <text class="small" x="140" y="670">Assignment · Notifications</text>
+
+  <rect class="box" x="440" y="620" width="320" height="120"/>
+  <text class="label" x="460" y="650">Python Analytics Service</text>
+  <text class="small" x="460" y="670">Daily aggregation · Reports</text>
+
+  <rect class="box" x="760" y="620" width="320" height="120"/>
+  <text class="label" x="780" y="650">Go Data Processor</text>
+  <text class="small" x="780" y="670">High throughput ETL</text>
+
+  <!-- NdaY Core -->
+  <rect class="box-warn" x="420" y="520" width="160" height="80"/>
+  <text class="label" x="440" y="545">NdaY Core</text>
+  <text class="small" x="440" y="565">operatorId · Canonical Data Model</text>
+
+  <!-- Data Lake and Serverless -->
+  <rect class="box" x="60" y="760" width="320" height="40"/>
+  <text class="small" x="80" y="785">Cloud Storage / Data Lake</text>
+
+  <rect class="box" x="820" y="760" width="320" height="40"/>
+  <text class="small" x="840" y="785">Serverless Functions AWS Lambda / Azure</text>
+
+  <!-- Monitoring and Security -->
+  <rect class="box" x="980" y="520" width="180" height="120"/>
+  <text class="label" x="1000" y="550">Monitoring & Alerts</text>
+  <text class="small" x="1000" y="570">DLQ · Error logs · Dashboards</text>
+  <text class="label" x="1000" y="600">Security & Rate Limits</text>
+  <text class="small" x="1000" y="620">HMAC · TLS · Quotas</text>
+
+  <!-- Connectors -->
+  <path class="connector" d="M210 250 L210 270" />
+  <path class="connector" d="M210 390 L210 400" />
+  <path class="connector" d="M540 190 L840 190" />
+  <path class="connector" d="M700 250 L700 270" />
+  <path class="connector" d="M540 250 L540 270" />
+  <path class="connector" d="M600 400 L600 520" />
+  <path class="connector" d="M420 520 L420 600" />
+  <path class="connector" d="M540 600 L540 620" />
+  <path class="connector" d="M360 600 L360 620" />
+  <path class="connector" d="M840 210 L840 250" />
+  <path class="connector" d="M420 480 L420 520" />
+  <path class="connector" d="M700 700 L700 740" />
+  <path class="connector" d="M300 740 L300 760" />
+  <path class="connector" d="M900 740 L900 760" />
+
+  <!-- Footer small note -->
+  <text class="small" x="80" y="740">Pilot scope: 4th Arrondissement CUA · CRAL Alasora · 1–2 municipal operators + private collectors</text>
+</svg>

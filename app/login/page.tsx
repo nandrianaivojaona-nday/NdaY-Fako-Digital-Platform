@@ -1,39 +1,61 @@
-import LoginForm from '../../components/auth/LoginForm';
-import { ArrowLeft } from 'lucide-react'; // Optional: for a clean icon
-import Link from 'next/link';
+import LoginForm from "../../components/auth/LoginForm";
+import Logo from "../../components/Logo";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
-export default function LoginPage() {
+type LoginPageProps = {
+  searchParams?: Promise<{
+    returnUrl?: string;
+    redirect?: string;
+    message?: string;
+  }>;
+};
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const params = (await searchParams) ?? {};
+
+  const returnUrl = params.returnUrl || params.redirect || "/";
+  const message = params.message || "";
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 relative">
-    {/* Exit Button in the Top Left */ }
-    <div className="absolute top-8 left-8">
-    <Link 
-      href="/" 
-      className="flex items-center text-gray-500 hover:text-gray-800 transition-colors"
-    >
-      <ArrowLeft className="w-4 h-4 mr-2" />
-      Cancel and return to home
-    </Link>
-  </div>
+    <main className="min-h-screen bg-[#0b1220] text-white flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
+        <Link
+          href="/"
+          className="mb-6 inline-flex items-center gap-2 text-sm text-white/70 hover:text-white transition-colors"
+        >
+          <ArrowLeft size={16} />
+          Back
+        </Link>
 
-    <div className="max-w-md w-full">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">NdaY-Fako</h1>
-          <p className="text-gray-600 mt-2">Waste Management Platform</p>
-        </div>
-        
-        <LoginForm />
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-2xl">
+          {/* Watermark background */}
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.06]">
+            <Logo width={220} height={220} className="object-contain" />
+          </div>
 
-        {/* Secondary Exit option below the form */}
-        <div className="mt-6 text-center">
-          <Link 
-            href="/" 
-            className="text-sm text-gray-400 hover:underline"
-          >
-            Not an authorized user? View Public Dashboard
-          </Link>
+          {/* Foreground content */}
+          <div className="relative z-10">
+            <div className="mb-6">
+              <h1 className="text-2xl font-black uppercase tracking-wide text-white">
+                Waste Management Platform
+              </h1>
+
+              <p className="mt-2 text-sm text-white/70">
+                Log in to start, resume, or update your assessment.
+              </p>
+
+              {message && (
+                <div className="mt-4 rounded-xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">
+                  {message}
+                </div>
+              )}
+            </div>
+
+            <LoginForm returnUrl={returnUrl} />
+          </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

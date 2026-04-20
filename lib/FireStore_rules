@@ -1,0 +1,286 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function role() {
+  return isSignedIn() &&
+    exists(/databases/$(database)/documents/users/$(request.auth.uid))
+    ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+    : null;
+}
+
+function isSuperAdmin() {
+  return role() == 'SUPER_ADMIN';
+}
+
+function isMunicipalityAdmin() {
+  return role() == 'MUNICIPALITY_ADMIN';
+}
+
+function isOperatorAdmin() {
+  return role() == 'OPERATOR_ADMIN';
+}
+
+function isCollector() {
+  return role() == 'COLLECTOR';
+}
+
+function isCitizen() {
+  return role() == 'CITIZEN';
+}
+    /* ========= MUNICIPALITIES (new top-level for explicit scoping) ========= */
+    match /municipalities/{munId} {
+      allow read: if isSignedIn() && (
+        isSuperAdmin() ||
+        (isMunicipalityAdmin() && municipalityId() == munId)
+      );
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    /* ========= OPERATORS ========= */
+    match /operators/{opId} {
+
+  		allow read: if true;
+
+  		allow write: if isSuperAdmin();
+
+		}
+
+    /* ========= USERS ========= */
+    match /users/{userId} {
+      allow read: if isSignedIn() && (
+        request.auth.uid == userId ||
+        isSuperAdmin()
+      );
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    /* ========= COLLECTORS ========= */
+    match /collectors/{collectorId} {
+      allow get: if isSignedIn() && (
+        isSuperAdmin() ||
+        canAccessOperator(resource.data.operatorId)
+      );
+      allow list: if isSignedIn() && safeQuery() && (
+        isSuperAdmin() ||
+        (isMunicipalityAdmin() && municipalityId() == getOperatorMunicipality(operatorId()))
+      );
+      allow create: if isSignedIn() && (
+        isSuperAdmin() ||
+        (isOperatorAdmin() && request.resource.data.operatorId == operatorId())
+      );
+      allow update, delete: if isSignedIn() && (
+        isSuperAdmin() ||
+        (isOperatorAdmin() && resource.data.operatorId == operatorId())
+      );
+    }
+
+    /* ========= VEHICLES ========= */
+    match /vehicles/{vehicleId} {
+      allow get: if isSignedIn() && (
+        isSuperAdmin() ||
+        canAccessOperator(resource.data.operatorId)
+      );
+      allow list: if safeQuery() && (
+        isSuperAdmin() ||
+        (isOperatorAdmin() && operatorId() == resource.data.operatorId) ||
+        isMunicipalityAdmin()
+      );
+      allow create, update, delete: if isSignedIn() && (
+        isSuperAdmin() ||
+        (isOperatorAdmin() && request.resource.data.operatorId == operatorId())
+      );
+    }
+
+    /* ========= BINS ========= */
+    match /bins/{binId} {
+      allow get: if isSignedIn() && (
+        isSuperAdmin() ||
+        canAccessOperator(resource.data.operatorId) ||
+        (isCitizen() && resource.data.citizenId == request.auth.uid)
+      );
+      allow list: if safeQuery() && (
+        isSuperAdmin() ||
+        (isOperatorAdmin() && operatorId() == resource.data.operatorId) ||
+        isMunicipalityAdmin()
+      );
+      allow create, update, delete: if isSignedIn() && (
+        isSuperAdmin() ||
+        (isOperatorAdmin() && request.resource.data.operatorId == operatorId())
+      );
+    }
+
+    /* ========= PICKUPS ========= */
+    match /pickups/{pickupId} {
+      allow get: if isSignedIn() && (
+        isSuperAdmin() ||
+        canAccessOperator(resource.data.operatorId)
+      );
+      allow list: if safeQuery() && (
+        isSuperAdmin() ||
+        (isOperatorAdmin() && operatorId() == resource.data.operatorId) ||
+        isMunicipalityAdmin()
+      );
+      allow create: if isSignedIn() && (
+        isSuperAdmin() ||
+        (isCollector() && request.resource.data.operatorId == operatorId())
+      );
+      allow update, delete: if isSignedIn() && (
+        isSuperAdmin() ||
+        (isOperatorAdmin() && resource.data.operatorId == operatorId())
+      );
+    }
+
+    /* ========= RECYCLING RECORDS ========= */
+    match /recycling_records/{recordId} {
+      allow get, list: if safeQuery() && (
+        isSuperAdmin() ||
+        isMunicipalityAdmin() ||
+        canAccessOperator(resource.data.operatorId)
+      );
+      allow create: if isSignedIn() && (
+        isSuperAdmin() ||
+        (isOperatorAdmin() && request.resource.data.operatorId == operatorId())
+      );
+      allow update, delete: if isSignedIn() && (
+        isSuperAdmin() ||
+        (isOperatorAdmin() && resource.data.operatorId == operatorId())
+      );
+    }
+
+    /* ========= CITIZENS ========= */
+    match /citizens/{citizenId} {
+      allow get: if isSignedIn() && (
+        request.auth.uid == resource.data.userId ||
+        isSuperAdmin() ||
+        canAccessOperator(resource.data.operatorId)
+      );
+      allow list: if false;  // Prevent collection scans; use indexed queries client-side
+      allow create: if isSignedIn() && (
+        isCitizen() && request.resource.data.userId == request.auth.uid &&
+        request.resource.data.operatorId == operatorId()
+      );
+      allow update: if isSignedIn() && (
+        (isCitizen() && request.auth.uid == resource.data.userId) ||
+        canAccessOperator(resource.data.operatorId) ||
+        isSuperAdmin()
+      );
+      allow delete: if false;
+    }
+
+    /* ========= SUBSCRIPTIONS ========= */
+    match /subscriptions/{subId} {
+      allow get: if isSignedIn() && (
+        isSuperAdmin() ||
+        canAccessOperator(resource.data.operatorId) ||
+        (isCitizen() && resource.data.citizenId == request.auth.uid)
+      );
+      allow list: if safeQuery() && (
+        isSuperAdmin() ||
+        (isOperatorAdmin() && operatorId() == resource.data.operatorId)
+      );
+      allow create, update: if isSignedIn() && (
+        isSuperAdmin() ||
+        (isOperatorAdmin() && request.resource.data.operatorId == operatorId())
+      );
+      allow delete: if false;
+    }
+
+    /* ========= TRAINING MODULES ========= */
+    match /training_modules/{moduleId} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
+    /* ========= TRAINING PROGRESS ========= */
+    match /training_progress/{progressId} {
+      allow get: if isSignedIn() && (
+        isSuperAdmin() ||
+        request.auth.uid == resource.data.userId
+      );
+      allow list: if safeQuery() && request.auth.uid == resource.data.userId;
+      allow create, update: if isSignedIn() && request.auth.uid == request.resource.data.userId;
+      allow delete: if false;
+    }
+
+    /* ========= PICKUP REQUESTS ========= */
+    match /pickup_requests/{requestId} {
+      allow get: if isSignedIn() && (
+        isSuperAdmin() ||
+        canAccessOperator(resource.data.operatorId) ||
+        (isCitizen() && resource.data.citizenId == request.auth.uid)
+      );
+      allow list: if safeQuery() && (
+        isSuperAdmin() ||
+        (isOperatorAdmin() && operatorId() == resource.data.operatorId) ||
+        (isCitizen() && request.query == null || resource.data.citizenId == request.auth.uid)
+      );
+      allow create: if true;  // Allow anon if no auth req; validate citizenId server-side
+      allow update: if isSignedIn() && (
+        (isCitizen() && resource.data.citizenId == request.auth.uid) ||
+        canAccessOperator(resource.data.operatorId) ||
+        isSuperAdmin()
+      );
+      allow delete: if false;
+    }
+
+    /* ========= PAYMENTS ========= */
+    match /payments/{paymentId} {
+      allow get: if isSignedIn() && (
+        isSuperAdmin() ||
+        (isCitizen() && resource.data.payerUserId == request.auth.uid) ||
+        canAccessOperator(resource.data.operatorId)
+      );
+      allow list: if safeQuery() && (
+        isSuperAdmin() ||
+        (isOperatorAdmin() && operatorId() == resource.data.operatorId)
+      );
+      allow create: if isSignedIn();
+      allow update, delete: if isSuperAdmin();
+    }
+
+    /* ========= SORTING VIOLATIONS ========= */
+    match /sorting_violations/{violationId} {
+      allow get: if isSignedIn() && (
+        isSuperAdmin() ||
+        isMunicipalityAdmin() ||
+        canAccessOperator(resource.data.operatorId) ||
+        (isCitizen() && resource.data.citizenId == request.auth.uid)
+      );
+      allow list: if safeQuery() && (
+        isSuperAdmin() ||
+        isMunicipalityAdmin() ||
+        (isOperatorAdmin() && operatorId() == resource.data.operatorId)
+      );
+      allow create: if isSignedIn() && (
+        isCollector() || isOperatorAdmin() || isSuperAdmin()
+      );
+      allow update: if isSignedIn() && (
+        isOperatorAdmin() && resource.data.operatorId == operatorId()
+      );
+      allow delete: if false;
+    }
+
+    /* ========= IMPACT METRICS ========= */
+		match /impact_metrics/{metricId} {
+
+  		allow read: if true;
+
+  		allow write: if isSuperAdmin();
+    }
+    
+    /* ========= CAMPAIGNS ========= */
+    match /campaigns/{campaignId} {
+      // Allow public read for the platform
+      allow read: if true; 
+      
+      // Allow write if Super Admin OR temporarily for seeding
+      // Remove '|| true' once seeding is completed in production
+      allow write: if isSuperAdmin() || true; 
+    }
+    match /assessmentDrafts/{draftId} {
+  allow read, write: if request.auth != null;
+}
+
+}
+}

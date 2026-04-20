@@ -2,7 +2,12 @@ import path from "path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["http://192.168.0.101:3000"],
+  allowedDevOrigins: [
+    'localhost',
+    '127.0.0.1',
+    '192.168.88.*',       // Wildcard for entire subnet (if supported)
+    '*.local',            // For .local domains (e.g., macbook.local)
+  ],
   turbopack: {
     root: path.join(__dirname),
   },

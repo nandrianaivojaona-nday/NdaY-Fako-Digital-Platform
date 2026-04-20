@@ -7,14 +7,16 @@ export async function POST(req: NextRequest) {
 
   res.cookies.set("session", "active", {
     path: "/",
-    httpOnly: false,
+    httpOnly: true,
     sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
   });
 
   res.cookies.set("role", role || "SUPER_ADMIN", {
     path: "/",
-    httpOnly: false,
+    httpOnly: true,
     sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
   });
 
   return res;

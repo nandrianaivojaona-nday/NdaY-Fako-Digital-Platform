@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 // import './layout.css';
-import AuthProvider from '../components/auth/AuthProvider';
+import {AuthProvider} from '../components/auth/AuthProvider';
 
 
 export const metadata: Metadata = {

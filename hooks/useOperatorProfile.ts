@@ -13,7 +13,7 @@ interface ProfileUpdate {
 export const updateOperatorProfile = async (operatorId: string, inputData: ProfileUpdate) => {
   const { appUser } = useAuth();
   
-  if (!appUser || appUser.role !== 'operator_admin' || appUser.operatorId !== operatorId) {
+  if (!appUser || appUser.role as string !== 'operator_admin' || appUser.operatorId !== operatorId) {
     throw new Error('Unauthorized');
   }
 

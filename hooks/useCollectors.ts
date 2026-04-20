@@ -12,7 +12,7 @@ interface Collector {
   municipalityId: string;
   operatorId: string;
   productivity: string;
-  role: 'collector';
+  role: 'collector' | 'operator_admin';
   status?: 'active' | 'inactive';
 }
 

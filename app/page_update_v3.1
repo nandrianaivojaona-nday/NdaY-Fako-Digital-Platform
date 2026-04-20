@@ -1,0 +1,532 @@
+// app/page.tsx
+import {
+  getPublicOperators,
+  getGlobalImpact,
+  getOperatorImpact,
+} from "@/lib/queries";
+import {
+  BookCheck,
+  QrCode,
+  Truck,
+  BarChart3,
+  Landmark,
+  Building2,
+  ScanLine,
+  Recycle,
+  Leaf,
+  Coins,
+  CheckCircle,
+  ChartGantt,
+  WeightIcon,
+  HouseIcon,
+  BookMarked,
+} from "lucide-react";
+import Logo from "../components/Logo";
+import Brand from "../components/Brand";
+import Link from "next/link";
+
+export default async function Home() {
+  const operators = await getPublicOperators();
+  const globalImpact = await getGlobalImpact();
+
+  return (
+    <div className="app-root">
+      <div className="app-overlay">
+        <div className="page-container">
+          <header className="header">
+            <div className="header-logo">
+              <Logo />
+            </div>
+            <Brand />
+            <h1 className="title">NdaY&apos;Fako</h1>
+            <p className="subtitle">
+              Waste collection and recycling management platform
+            </p>
+          </header>
+
+          {/* GLOBAL IMPACT */}
+          <section className="section">
+            <div className="header">
+              <h2>Global Impact</h2>
+            </div>
+
+            <div className="grid-3">
+              <div className="card impact-card">
+                <div className="card-head">
+                  <HouseIcon size={28} className="card-icon" />
+                  <h3>Households served</h3>
+                </div>
+                <p className="title-stat">{globalImpact?.households ?? 0}</p>
+              </div>
+
+              <div className="card impact-card">
+                <div className="card-head">
+                  <WeightIcon size={28} className="card-icon" />
+                  <h3>Kg collected</h3>
+                </div>
+                <p className="title-stat">{globalImpact?.kg ?? 0}</p>
+              </div>
+
+              <div className="card impact-card">
+                <div className="card-head">
+                  <Coins size={28} className="card-icon" />
+                  <h3>SOM</h3>
+                </div>
+                <p className="title-stat">{globalImpact?.som ?? 0}%</p>
+              </div>
+            </div>
+          </section>
+
+          {/* ECOSYSTEM */}
+          <section className="section">
+            <div className="header">
+              <h2>Ecosystem</h2>
+            </div>
+
+            <div className="grid-3">
+              <div className="card">
+                <div className="card-head">
+                  <BookCheck size={30} className="card-icon" />
+                  <h3>Digital IDs for personnel and equipment</h3>
+                </div>
+                <p>
+                  Unique digital identities for operators, staff, bins, vehicles,
+                  and field equipment.
+                </p>
+
+                <div className="card-details">
+                  <h4>Core functions</h4>
+                  <ul>
+                    <li>
+                      <CheckCircle size={16} /> Unique IDs for staff and field teams
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Identification of vehicles and bins
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Equipment traceability in operations
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Stronger accountability and control
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="card">
+                <div className="card-head">
+                  <ChartGantt size={30} className="card-icon" />
+                  <h3>Geographic waste flow management</h3>
+                </div>
+                <p>
+                  Territory-based planning and visibility for waste flows from source
+                  to destination.
+                </p>
+
+                <div className="card-details">
+                  <h4>Core functions</h4>
+                  <ul>
+                    <li>
+                      <CheckCircle size={16} /> Zone-based service mapping
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Route visibility and territory control
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Source-to-destination waste flow tracking
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Operational planning by geography
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="card">
+                <div className="card-head">
+                  <Truck size={30} className="card-icon" />
+                  <h3>Complete flow from subscription to dumping</h3>
+                </div>
+                <p>
+                  A complete operational chain from service enrollment to final waste
+                  destination.
+                </p>
+
+                <div className="card-details">
+                  <h4>Core functions</h4>
+                  <ul>
+                    <li>
+                      <CheckCircle size={16} /> Household or business subscription
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Collection request and pickup
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Route execution and transport
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Final dumping, recovery, or processing
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* NDAY'FAKO PLATFORM */}
+          <section className="section">
+            <div className="header">
+              <h2>NdaY&apos;Fako Platform</h2>
+            </div>
+
+            <div className="grid-3">
+              <div className="card">
+                <div className="card-head">
+                  <QrCode size={30} className="card-icon" />
+                  <h3>Field QR Identification & Pickup</h3>
+                </div>
+                <p>
+                  Real-time validation of pickups and field assets through QR-enabled
+                  collection workflows.
+                </p>
+
+                <div className="card-details">
+                  <h4>Core functions</h4>
+                  <ul>
+                    <li>
+                      <CheckCircle size={16} /> QR identification of households and bins
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Pickup validation at service points
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Real-time collection traceability
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Reduced service disputes and fraud
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="card">
+                <div className="card-head">
+                  <BookCheck size={30} className="card-icon" />
+                  <h3>Subscription, Sorting & Requests</h3>
+                </div>
+                <p>
+                  Citizens and businesses join the service, sort waste, and request
+                  pickups through structured workflows.
+                </p>
+
+                <div className="card-details">
+                  <h4>Core functions</h4>
+                  <ul>
+                    <li>
+                      <CheckCircle size={16} /> Subscription and customer onboarding
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Waste sorting by category
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Pickup and service request workflows
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Better participation and service quality
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="card">
+                <div className="card-head">
+                  <Truck size={30} className="card-icon" />
+                  <h3>Collection programs & Logistics</h3>
+                </div>
+                <p>
+                  Collection services are managed through organized programs, routes,
+                  crews, and logistics execution.
+                </p>
+
+                <div className="card-details">
+                  <h4>Core functions</h4>
+                  <ul>
+                    <li>
+                      <CheckCircle size={16} /> Route and shift planning
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Vehicle and crew coordination
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Territory-based collection execution
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Delivery to transfer, recycling, or dump sites
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* ENVIRONMENTAL MONITORING & REPORTING */}
+          <section className="section">
+            <div className="header">
+              <h2>Environmental Monitoring & Reporting</h2>
+            </div>
+
+            <div className="grid-3">
+              <div className="card">
+                <div className="card-head">
+                  <BarChart3 size={30} className="card-icon" />
+                  <h3>Business indicators and environmental yields</h3>
+                </div>
+                <p>
+                  Measure collection performance, recovery output, and environmental
+                  value created across operators and territories.
+                </p>
+
+                <div className="card-details">
+                  <h4>Core functions</h4>
+                  <ul>
+                    <li>
+                      <CheckCircle size={16} /> Track operational KPIs by zone and operator
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Measure recovered waste and diversion performance
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Monitor environmental and business yields
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Provide evidence for decisions, reporting, and funding
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="card">
+                <div className="card-head">
+                  <Landmark size={30} className="card-icon" />
+                  <h3>Multi-level governance and oversight</h3>
+                </div>
+                <p>
+                  Give municipalities, partners, and regulators a shared view of what
+                  is happening across the service chain.
+                </p>
+
+                <div className="card-details">
+                  <h4>Core functions</h4>
+                  <ul>
+                    <li>
+                      <CheckCircle size={16} /> Monitor operators across multiple administrative levels
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Validate service execution and compliance
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Share trusted data with public and institutional stakeholders
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Improve transparency and accountability
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="card">
+                <div className="card-head">
+                  <Building2 size={30} className="card-icon" />
+                  <h3>Policy & Oversight</h3>
+                </div>
+                <p>
+                  Turn field data into planning intelligence for regulation, expansion,
+                  and long-term waste management policy.
+                </p>
+
+                <div className="card-details">
+                  <h4>Core functions</h4>
+                  <ul>
+                    <li>
+                      <CheckCircle size={16} /> Support policy decisions with verified field data
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Guide planning for service expansion and infrastructure
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Strengthen oversight and policy enforcement
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Build institutional reporting and strategic visibility
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* WASTE PROCESSING & RECYCLING */}
+          <section className="section">
+            <div className="header">
+              <h2>Waste Processing & Recycling</h2>
+            </div>
+
+            <div className="grid-3">
+              <div className="card">
+                <div className="card-head">
+                  <ScanLine size={30} className="card-icon" />
+                  <h3>Urban monitoring</h3>
+                </div>
+                <p>
+                  Track waste activity across neighborhoods, hotspots, service gaps,
+                  and operational territories.
+                </p>
+
+                <div className="card-details">
+                  <h4>Core functions</h4>
+                  <ul>
+                    <li>
+                      <CheckCircle size={16} /> Monitor waste flows by zone and route
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Detect unmanaged areas and service gaps
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Identify intervention priorities in the city
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Improve targeting of field operations
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="card">
+                <div className="card-head">
+                  <Recycle size={30} className="card-icon" />
+                  <h3>Circular economy</h3>
+                </div>
+                <p>
+                  Redirect recyclable and recoverable waste into value chains that
+                  support reuse, recovery, and local economic activity.
+                </p>
+
+                <div className="card-details">
+                  <h4>Core functions</h4>
+                  <ul>
+                    <li>
+                      <CheckCircle size={16} /> Identify recyclable and recoverable material streams
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Support reuse and recycling ecosystems
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Track downstream value creation from collected waste
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Connect waste operations to circular economy outcomes
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="card">
+                <div className="card-head">
+                  <Leaf size={30} className="card-icon" />
+                  <h3>Processing & diversion</h3>
+                </div>
+                <p>
+                  Move waste away from uncontrolled dumping through treatment,
+                  transformation, and measurable diversion pathways.
+                </p>
+
+                <div className="card-details">
+                  <h4>Core functions</h4>
+                  <ul>
+                    <li>
+                      <CheckCircle size={16} /> Track processed and diverted waste volumes
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Support composting, recovery, and treatment pathways
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Reduce landfill and dump-site dependence
+                    </li>
+                    <li>
+                      <CheckCircle size={16} /> Make downstream processing visible and measurable
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* WASTE OPERATORS */}
+          <section className="section">
+            <div className="header">
+              <h2>Waste Operators</h2>
+            </div>
+
+            <div className="grid-3">
+              {operators.length === 0 ? (
+                <div className="card">
+                  <h3>No operator available</h3>
+                </div>
+              ) : (
+                await Promise.all(
+                  operators.map(async (operator: any) => {
+                    const impact = await getOperatorImpact(operator.id);
+
+                    return (
+                      <div key={operator.id} className="card">
+                        <div className="card-head">
+                          <BookMarked size={28} className="card-icon" />
+                          <h3>{operator.name}</h3>
+                        </div>
+
+                        <div className="operator-meta">
+                          <span className="operator-city">{operator.city}</span>
+                          <span className="operator-type">{operator.type}</span>
+                        </div>
+
+                        <div className="operator-metrics">
+                          <div className="operator-metric">
+                            <span className="operator-metric-label">Households</span>
+                            <span className="operator-metric-value">
+                              {impact?.households ?? 0}
+                            </span>
+                          </div>
+
+                          <div className="operator-metric">
+                            <span className="operator-metric-label">Kg</span>
+                            <span className="operator-metric-value">
+                              {impact?.kg ?? 0}
+                            </span>
+                          </div>
+
+                          <div className="operator-metric">
+                            <span className="operator-metric-label">SOM</span>
+                            <span className="operator-metric-value">
+                              {impact?.som ?? 0}%
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="operator-action">
+                          <Link href={`/operators/${operator.id}`} className="button">
+                            View
+                          </Link>
+                        </div>
+                      </div>
+                    );
+                  })
+                )
+              )}
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+}
+ W

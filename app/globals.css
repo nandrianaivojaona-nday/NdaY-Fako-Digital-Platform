@@ -1,6 +1,5 @@
 @import "tailwindcss";
 
-
 /* ======================
    BASE
 ====================== */
@@ -12,6 +11,7 @@
     height: 100%;
     margin: 0;
     font-family: system-ui, Arial, sans-serif;
+    scroll-behavior: smooth;
   }
 
 }
@@ -33,36 +33,36 @@
   .app-overlay {
     position: relative;
     min-height: 100vh;
-  
     background: linear-gradient(
       180deg,
-      rgba(3, 28, 18, 0.95) 0%,     /* Deep forest green (top) */
-      rgba(6, 64, 43, 0.85) 35%,    /* Rich ecosystem green */
-      rgba(13, 148, 136, 0.55) 70%, /* Teal (your brand color) */
-      rgba(13, 148, 136, 0.25) 100% /* Light transparent */
+      rgba(3, 28, 18, 0.95) 0%,
+      rgba(6, 64, 43, 0.85) 35%,
+      rgba(13, 148, 136, 0.55) 70%,
+      rgba(13, 148, 136, 0.25) 100%
     );
-  
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-  
-    padding: 60px 20px;
-    display: flex;
-    flex-direction: column;
+    /* REMOVE fixed height and overflow restrictions */
+    /* Remove padding that might cause issues */
   }
 
   .page-container {
     max-width: 1200px;
     margin: auto;
-  
+
     display: flex;
     flex-direction: column;
     gap: 50px;
   }
 
-  .section {
-    margin-top: 40px;
-    color: white;
-  }
+  /* Update section class to remove snap-scroll constraints */
+.section {
+  margin-top: 40px;
+  margin-bottom: 40px;
+  color: white;
+  padding: 2rem;
+  /* Remove h-screen and snap-related classes */
+}
 
   .header {
     text-align: center;
@@ -85,38 +85,37 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 24px;
   }
-  
+
   @media (max-width: 900px) {
     .grid-3 {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
-  
+
   @media (max-width: 640px) {
     .grid-3 {
       grid-template-columns: 1fr;
     }
   }
-  
 
   .card {
     background: rgba(255, 255, 255, 0.06);
     backdrop-filter: blur(14px);
-  
+
     border-radius: 18px;
     padding: 22px;
-  
+
     border: 1px solid rgba(34, 197, 94, 0.2);
-  
+
     box-shadow:
       0 10px 40px rgba(0,0,0,0.4),
       inset 0 0 0 1px rgba(255,255,255,0.05);
-  
+
     transition: all 0.3s ease;
     position: relative;
-    overflow: hidden; /* clips the functionalities overlay */
+    overflow: hidden;
   }
-  
+
   .card:hover {
     transform: translateY(-6px) scale(1.02);
   }
@@ -127,76 +126,75 @@
     gap: 12px;
     margin-bottom: 12px;
   }
-  
+
   .card-icon {
     flex-shrink: 0;
     color: #bbf7d0;
     filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.35));
   }
-  
+
   .card h3 {
     margin: 0;
   }
 
-  /* The container for core functionalities */
+  /* SCROLLABLE CARD DETAILS (kept as-is, works well) */
   .card-details {
     position: absolute;
     inset: 0;
-    background: rgba(13, 148, 136, 0.98); /* Slightly more opaque for readability */
+    background: rgba(13, 148, 136, 0.98);
     padding: 20px;
+
     display: flex;
     flex-direction: column;
-    justify-content: flex-start; /* Changed from center to allow scrolling from top */
-    
-    /* SCROLL LOGIC */
-    overflow-y: auto; 
+    justify-content: flex-start;
+
+    overflow-y: auto;
     max-height: 100%;
-    
+
     opacity: 0;
     transform: translateY(100%);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 10;
   }
-  
-  /* Custom Scrollbar for the Hover Card */
+
   .card-details::-webkit-scrollbar {
     width: 4px;
   }
-  
+
   .card-details::-webkit-scrollbar-track {
     background: rgba(255, 255, 255, 0.1);
   }
-  
+
   .card-details::-webkit-scrollbar-thumb {
-    background: #bbf7d0; /* Matches your icon color */
+    background: #bbf7d0;
     border-radius: 10px;
   }
 
-.card:hover .card-details {
-  opacity: 1;
-  transform: translateY(0); /* Slide up on hover */
-}
+  .card:hover .card-details {
+    opacity: 1;
+    transform: translateY(0);
+  }
 
-.card-details h4 {
-  color: #bbf7d0;
-  margin-bottom: 8px;
-  font-size: 1.1rem;
-}
+  .card-details h4 {
+    color: #bbf7d0;
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+  }
 
-.card-details ul {
-  list-style: none;
-  padding: 0;
-  font-size: 0.9rem;
-  line-height: 1.4;
-}
+  .card-details ul {
+    list-style: none;
+    padding: 0;
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
 
-.card-details li {
-  margin-bottom: 6px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-  
+  .card-details li {
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   .icon-card {
     background: rgba(255,255,255,0.08);
     backdrop-filter: blur(10px);
@@ -223,8 +221,12 @@
   .button:hover {
     background: #0f766e;
   }
-
 }
+
+/* ======================
+   EXTRA COMPONENTS
+====================== */
+
 .section-block {
   padding: 30px;
   border-radius: 20px;
@@ -234,6 +236,7 @@
 
   border: 1px solid rgba(255,255,255,0.08);
 }
+
 .tabs {
   display: flex;
   flex-wrap: wrap;
@@ -263,7 +266,6 @@
   font-size: 3.8rem;
   font-weight: 700;
   text-align: center;
-
   color: #ffffff;
 
   text-shadow:
@@ -287,4 +289,192 @@
   );
 
   font-size: 1.2rem;
+}
+/* ======================
+   CAMPAIGN TICKER (PREMIUM)
+====================== */
+
+.campaign-ticker {
+  width: 100%;
+  overflow: visible; /* 🔥 CRITICAL FIX: Allows hover preview to render above */
+  position: relative;
+  border-radius: 14px;
+  background: rgba(4, 24, 18, 0.72);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  z-index: 50;
+}
+
+/* TRACK */
+.campaign-ticker-track {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: max-content;
+  animation: tickerScroll 25s linear infinite;
+  padding: 8px 0;
+}
+
+/* PAUSE ON HOVER */
+.campaign-ticker:hover .campaign-ticker-track {
+  animation-play-state: paused;
+}
+
+/* ITEMS - Premium Glassmorphic Cards */
+.campaign-ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f0fdf4;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: visible; /* Allows hover preview to render above */
+}
+
+/* Glassmorphic shine effect */
+.campaign-ticker-item::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.campaign-ticker-item:hover::before {
+  left: 100%;
+}
+
+/* Hover Effects */
+.campaign-ticker-item:hover {
+  transform: translateY(-2px) scale(1.02);
+  border-color: rgba(187, 247, 208, 0.6);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Icon styling */
+.campaign-ticker-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
+}
+
+.campaign-ticker-item:hover .campaign-ticker-icon {
+  transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Campaign Name */
+.campaign-ticker-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+/* Bankability Score Badge */
+.campaign-ticker-score {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+  font-family: monospace;
+  transition: all 0.2s ease;
+}
+
+.campaign-ticker-item:hover .campaign-ticker-score {
+  transform: scale(1.05);
+}
+
+/* Color variations for scores */
+.campaign-ticker-score.text-green-400 {
+  background: rgba(34, 197, 94, 0.2);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.3);
+}
+
+.campaign-ticker-score.text-blue-400 {
+  background: rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+}
+
+.campaign-ticker-score.text-yellow-400 {
+  background: rgba(234, 179, 8, 0.2);
+  box-shadow: 0 0 8px rgba(234, 179, 8, 0.3);
+}
+
+.campaign-ticker-score.text-red-400 {
+  background: rgba(239, 68, 68, 0.2);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+}
+
+/* INFINITE SCROLL ANIMATION */
+@keyframes tickerScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* EDGE FADE (premium look) */
+.campaign-ticker::before,
+.campaign-ticker::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 80px;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.campaign-ticker::before {
+  left: 0;
+  background: linear-gradient(to right, rgba(4, 24, 18, 1), transparent);
+}
+
+.campaign-ticker::after {
+  right: 0;
+  background: linear-gradient(to left, rgba(4, 24, 18, 1), transparent);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .campaign-ticker-item {
+    padding: 6px 12px;
+  }
+  
+  .campaign-ticker-name {
+    font-size: 0.8rem;
+  }
+  
+  .campaign-ticker-score {
+    font-size: 0.7rem;
+  }
+  
+  .campaign-ticker::before,
+  .campaign-ticker::after {
+    width: 40px;
+  }
 }

@@ -1,138 +1,161 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "./AuthProvider";
 
-export default function LoginForm() {
+type LoginFormProps = {
+  returnUrl?: string;
+};
+
+const LoginForm = ({ returnUrl = "/" }: LoginFormProps) => {
+  const { loginWithEmail, registerWithEmail, loginWithGoogle } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirect = searchParams.get('redirect') || '/';
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isRegister, setIsRegister] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError('');
+  const createSession = async () => {
+    const res = await fetch("/api/auth/session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        role: "SUPER_ADMIN",
+      }),
+    });
+
+    const text = await res.text();
+
+  if (!res.ok) {
+    throw new Error(`Failed to create session cookie: ${res.status} ${text}`);
+  }
+  };
+
+  const redirectToTarget = (message: string) => {
+    const separator = returnUrl.includes("?") ? "&" : "?";
+    router.replace(`${returnUrl}${separator}auth=${encodeURIComponent(message)}`);
+  };
+
+  const handleSubmit = async () => {
     setLoading(true);
+    setErrorMessage("");
+    setSuccessMessage("");
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-
-      await fetch('/api/session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          role: 'SUPER_ADMIN',
-        }),
-      });
-
-      window.location.href = redirect;
-    } catch (err: any) {
-      console.error('Login error:', err);
-
-      if (err.code === 'auth/invalid-credential') {
-        setError('Invalid email or password');
-      } else if (err.code === 'auth/user-not-found') {
-        setError('No account found with this email');
-      } else if (err.code === 'auth/wrong-password') {
-        setError('Incorrect password');
+      if (isRegister) {
+        await registerWithEmail(email, password);
+        await createSession();
+        setSuccessMessage("Account created successfully. Redirecting...");
+        redirectToTarget("registered");
       } else {
-        setError('Login failed. Please try again.');
+        await loginWithEmail(email, password);
+        await createSession();
+        setSuccessMessage("Login successful. Redirecting...");
+        redirectToTarget("success");
       }
+    } catch (error: any) {
+      setErrorMessage(
+        error?.message || "Authentication failed. Please check your credentials and try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setErrorMessage("");
+    setSuccessMessage("");
+
+    try {
+      await loginWithGoogle();
+      await createSession();
+      setSuccessMessage("Google login successful. Redirecting...");
+      redirectToTarget("success");
+    } catch (error: any) {
+      setErrorMessage(
+        error?.message || "Google login failed. Please try again."
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gray-100 px-4">
-      <div
-        className="absolute inset-0 bg-center bg-no-repeat bg-contain opacity-10"
-        style={{ backgroundImage: "url('/assets/images/nday-logo.png')" }}
-      />
-  
-      <div className="relative z-10 w-full max-w-md rounded-xl bg-white/90 p-6 shadow-xl backdrop-blur-sm">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">Login</h2>
-  
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
-          >
-            Exit
-          </button>
+    <div className="space-y-4">
+      {errorMessage && (
+        <div className="rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+          {errorMessage}
         </div>
-  
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label
-              htmlFor="email"
-              className="mb-1 block text-sm font-medium text-gray-700"
-            >
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200"
-              required
-            />
-          </div>
-  
-          <div>
-            <label
-              htmlFor="password"
-              className="mb-1 block text-sm font-medium text-gray-700"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:border-green-500 focus:ring-2 focus:ring-green-200"
-              required
-            />
-          </div>
-  
-          {error && (
-            <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">
-              {error}
-            </p>
-          )}
-  
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-md bg-green-600 px-4 py-2 font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
-  
-        <div className="mt-6 rounded-lg bg-gray-50 p-4">
-          <p className="mb-2 text-sm font-semibold text-gray-800">Test accounts</p>
-          <ul className="space-y-1 text-sm text-gray-600">
-            <li>nandrianaivojaona@gmail.com (super_admin)</li>
-            <li>admin@ndayfako.io (operator_admin)</li>
-            <li>col01.fkt01@ndayfako.io (collector)</li>
-          </ul>
+      )}
+
+      {successMessage && (
+        <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+          {successMessage}
         </div>
+      )}
+
+      <div>
+        <label className="mb-2 block text-sm font-semibold text-white/80">
+          Email
+        </label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/35 outline-none focus:border-emerald-400"
+        />
       </div>
+
+      <div>
+        <label className="mb-2 block text-sm font-semibold text-white/80">
+          Password
+        </label>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Enter your password"
+          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/35 outline-none focus:border-emerald-400"
+        />
+      </div>
+
+      <button
+        type="button"
+        onClick={handleSubmit}
+        disabled={loading}
+        className="w-full rounded-xl bg-emerald-500 px-4 py-3 text-sm font-black uppercase tracking-wide text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {loading ? "Please wait..." : isRegister ? "Create account" : "Log in"}
+      </button>
+
+      <button
+        type="button"
+        onClick={handleGoogleLogin}
+        disabled={loading}
+        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        Continue with Google
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setIsRegister((prev) => !prev)}
+        className="w-full text-sm text-white/70 hover:text-white transition-colors"
+      >
+        {isRegister
+          ? "Already have an account? Log in"
+          : "No account yet? Create one"}
+      </button>
     </div>
   );
-  
-}
+};
+
+export default LoginForm;

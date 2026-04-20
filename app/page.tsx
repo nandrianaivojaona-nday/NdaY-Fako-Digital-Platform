@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import fokontanyData from "@/seed/pilot/nday_fako_pilots.json"
+// import fokontanyData from "@/seed/pilot/nday_fako_pilots.json"
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import Brand from "../components/Brand";
@@ -59,7 +59,10 @@ export default function Page() {
     }
   }, [appUser, loading, router]);
 
-
+ // State declarations - FIXED: Added campaigns state
+ const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+ const [campaignsState] = useState<Campaign[]>([]);
+ const [selectedFokontany, setSelectedFokontany] = useState<string | null>(null);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null)
   const [globalImpact, setGlobalImpact] = useState<GlobalImpact>({
     households: 0,
@@ -67,6 +70,7 @@ export default function Page() {
     som: 0,
   });
   const [operators, setOperators] = useState<Operator[]>([]);
+  
 
   useEffect(() => {
     async function loadData() {
@@ -78,31 +82,19 @@ export default function Page() {
     loadData();
   }, []);
 
-  const campaigns: Campaign[] = fokontanyData.features.map((f: any) => ({
-    id: f.properties.id,
-    name: f.properties.name,
-    fokontany: f.properties.name,
-    location: f.properties.municipalityId,
-    type: f.properties.type,
-    description: `${f.properties.type} waste campaign`,
-    status: "ONGOING",
-    bankability: {
-      scores: { overall: 75, financial: 70, environmental: 80, operational: 75 },
-      investmentProfile: {
-        monthlyRevenue: 1250000,
-        estimatedROI: 18.5,
-        paybackMonths: 24,
-        riskLevel: "Low",
-        carbonCreditsPotential: 45,
-        carbonReductionTons: 120,
-      }
-    },
-    metrics: { waste: 0, operators: 0 },
-    geometry: f.geometry
-  }));
+  // In your component, replace the mock data with real data
+useEffect(() => {
+  async function loadCampaigns() {
+    const campaigns = await getCampaigns();
+    setCampaigns(campaigns);
+  }
+  loadCampaigns();
+}, []);
 
-  const [campaignsState, setCampaigns] = useState<Campaign[]>([]);
-  const [selectedFokontany, setSelectedFokontany] = useState<string | null>(null);
+  
+
+
+  // load Data from FireStore
 
   useEffect(() => {
     async function loadData() {
@@ -124,6 +116,8 @@ export default function Page() {
   }
     loadData();
   }, []);
+
+  // Operator Card Component - fetches its own impact data
 
   function OperatorCard({ operator }: { operator: Operator }) {
     const [impact, setImpact] = useState<any>(null);

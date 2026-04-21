@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
+import { adminDb } from "@/lib/firebase-admin";
 
 export async function POST() {
-  return NextResponse.json(
-    { message: "finish-setup not implemented yet" },
-    { status: 501 }
-  );
+  const db = adminDb();
 
+  return NextResponse.json({ ok: true });
 }

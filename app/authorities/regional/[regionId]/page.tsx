@@ -6,25 +6,9 @@ import {
   BarChart3, FileText, LocateFixed 
 } from "lucide-react";
 import Link from "next/link";
+import PageNavigation from "@/components/PageNavigation";
 
-export function PageNavigation() {
-  const router = useRouter();
-  return (
-    <div className="mb-8 flex w-full items-center justify-between border-b border-blue-400/20 pb-4">
-      <button onClick={() => router.back()} className="flex items-center gap-2 text-sm font-medium text-blue-300 hover:text-white transition-colors">
-        <ArrowLeft size={18} /> Back
-      </button>
-      <div className="flex gap-6">
-        <Link href="/" className="flex items-center gap-2 text-sm font-medium text-blue-300 hover:text-white transition-colors">
-          <Home size={18} /> Home
-        </Link>
-        <button onClick={() => router.push('/')} className="flex items-center gap-2 text-sm font-medium text-red-400 hover:text-red-300 transition-colors">
-          <X size={18} /> Exit
-        </button>
-      </div>
-    </div>
-  );
-}
+
 
 export default function RegionalDashboard() {
   const params = useParams();

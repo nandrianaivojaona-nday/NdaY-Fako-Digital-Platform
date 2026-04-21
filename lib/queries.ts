@@ -17,13 +17,6 @@ import {
 
 
 
-export async function getCampaigns(): Promise<any[]> {
-  
-  // Placeholder implementation
-  return [];
-}
-
-
 
 // ==============================
 // Public operators
@@ -152,4 +145,46 @@ export async function getMunicipalityImpact(
 
   return snap.data() as ImpactMetrics;
 
+}
+
+// ==============================
+// Campaigns
+// ==============================
+
+export async function getCampaigns() {
+  try {
+    console.log("🔍 getCampaigns: Starting fetch...");
+    
+    const campaignsRef = collection(db, 'campaigns');
+    const querySnapshot = await getDocs(campaignsRef);
+    
+    console.log(`📊 getCampaigns: Found ${querySnapshot.docs.length} documents`);
+    
+    const campaigns = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      console.log(`  - Mapping: ${doc.id}`, data.name || 'unnamed');
+      
+      return {
+        id: doc.id,
+        name: data.name || doc.id,
+        description: data.description || `${data.name || 'Campaign'} in ${data.fokontany || 'unknown area'}`,
+        fokontany: data.fokontany || 'Unknown',
+        location: data.municipality || data.location || 'Unknown',
+        type: data.type || 'WASTE',
+        status: data.status || 'DRAFT',
+        bankability: data.bankability || {
+          scores: { overall: 75, financial: 70, environmental: 80, operational: 75 }
+        },
+        metrics: data.metrics || { waste: 0, operators: 0 },
+        geometry: data.geometry || null
+      };
+    });
+    
+    console.log(`✅ getCampaigns: Returning ${campaigns.length} campaigns`);
+    return campaigns;
+    
+  } catch (error) {
+    console.error("❌ getCampaigns error:", error);
+    return [];
+  }
 }

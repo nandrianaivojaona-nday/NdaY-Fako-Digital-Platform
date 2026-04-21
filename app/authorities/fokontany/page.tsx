@@ -14,6 +14,8 @@ import {
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
+import PageNavigation from '@/components/PageNavigation'
+
 interface FokontanyData {
   id: string;
   name: string;
@@ -26,42 +28,7 @@ interface FokontanyData {
   performance: number;
 }
 
-export function PageNavigation() {
-    const router = useRouter();
-  
-    return (
-      <div className="mb-8 flex w-full items-center justify-between border-b border-blue-400/20 pb-4">
-        {/* Back Function */}
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-2 text-sm font-medium text-blue-300 transition-colors hover:text-white"
-        >
-          <ArrowLeft size={18} />
-          Back
-        </button>
-  
-        <div className="flex gap-6">
-          {/* Exit to Home */}
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-sm font-medium text-blue-300 transition-colors hover:text-white"
-          >
-            <Home size={18} />
-            Home
-          </Link>
-  
-          {/* Exit / Cancel Function */}
-          <button
-            onClick={() => router.push('/')}
-            className="flex items-center gap-2 text-sm font-medium text-red-400 transition-colors hover:text-red-300"
-          >
-            <X size={18} />
-            Exit
-          </button>
-        </div>
-      </div>
-    );
-  }
+
 
 export default function AuthoritiesFokontanyPage() {
   const [allFokontany, setAllFokontany] = useState<FokontanyData[]>([]);

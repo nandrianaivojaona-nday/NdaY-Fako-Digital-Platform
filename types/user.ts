@@ -7,11 +7,16 @@
 // ==============================
 
 export type Role =
-  | "SUPER_ADMIN"
+  | "SUPER_ADMIN" 
   | "MUNICIPALITY_ADMIN"
   | "OPERATOR_ADMIN"
   | "COLLECTOR"
-  | "CITIZEN";
+  | "CITIZEN"
+  | "super_admin" 
+  | "municipality_admin"
+  | "operator_admin"
+  | "collector"
+  | "citizen";
 
 
 

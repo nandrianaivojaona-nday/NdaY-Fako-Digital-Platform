@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { updateOperatorProfile } from '@/hooks/useOperatorProfile';
 import { useCollectors, type Collector } from '@/hooks/useCollectors';
 
+
 export default function OperatorSetup() {
   const params = useParams();
   const operatorId = params.operatorId as string;

@@ -1,576 +1,263 @@
-'use client';
+"use client";
 
-import { useAuth } from '@/hooks/useAuth';
-import { signOut } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
-import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import { 
-  TrendingUp, 
-  Users, 
-  AlertTriangle, 
-  Truck, 
-  Calendar,
-  Search,
-  Filter,
-  Download,
-  RefreshCw,
-  Eye,
-  CheckCircle,
-  XCircle,
-  Clock
-} from 'lucide-react';
+import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import {
+  ArrowLeft,
+  Building2,
+  Loader2,
+  MapPinned,
+  Users,
+  Truck,
+  BarChart3,
+} from "lucide-react";
+import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import PageNavigation from "@/components/PageNavigation";
 
-// Types
-interface Pickup {
+type Operator = {
   id: string;
-  collectorId: string;
-  collectorName: string;
-  binId: string;
-  location: string;
-  wasteType: 'organic' | 'plastic' | 'glass' | 'paper' | 'electronic' | 'mixed';
-  weight: number;
-  status: 'completed' | 'pending' | 'verified' | 'rejected';
-  timestamp: string;
-  violation: boolean;
-  violationType?: string;
-}
-
-interface KPIData {
-  todayPickups: number;
-  weeklyTonnage: number;
-  activeCollectors: number;
-  sortingViolations: number;
-  completionRate: number;
-  averageWeight: number;
-}
-
-// Mock data for demonstration
-const MOCK_PICKUPS: Pickup[] = [
-  {
-    id: '1',
-    collectorId: 'col_001',
-    collectorName: 'Jean Rakoto',
-    binId: 'BIN-001',
-    location: 'Antananarivo Centre',
-    wasteType: 'organic',
-    weight: 15.5,
-    status: 'completed',
-    timestamp: '2024-01-15T08:30:00',
-    violation: false
-  },
-  {
-    id: '2',
-    collectorId: 'col_002',
-    collectorName: 'Marie Raso',
-    binId: 'BIN-002',
-    location: 'Analakely',
-    wasteType: 'plastic',
-    weight: 8.2,
-    status: 'verified',
-    timestamp: '2024-01-15T09:15:00',
-    violation: false
-  },
-  {
-    id: '3',
-    collectorId: 'col_003',
-    collectorName: 'Paul Andry',
-    binId: 'BIN-003',
-    location: '67 Ha',
-    wasteType: 'mixed',
-    weight: 22.0,
-    status: 'pending',
-    timestamp: '2024-01-15T10:00:00',
-    violation: true,
-    violationType: 'Improper sorting - plastic in organic bin'
-  },
-  {
-    id: '4',
-    collectorId: 'col_001',
-    collectorName: 'Jean Rakoto',
-    binId: 'BIN-004',
-    location: 'Antaninarenina',
-    wasteType: 'glass',
-    weight: 5.3,
-    status: 'completed',
-    timestamp: '2024-01-14T14:20:00',
-    violation: false
-  },
-  {
-    id: '5',
-    collectorId: 'col_002',
-    collectorName: 'Marie Raso',
-    binId: 'BIN-005',
-    location: 'Mahamasina',
-    wasteType: 'paper',
-    weight: 12.8,
-    status: 'rejected',
-    timestamp: '2024-01-14T11:45:00',
-    violation: true,
-    violationType: 'Contaminated paper with food waste'
-  }
-];
-
-const MOCK_KPI: KPIData = {
-  todayPickups: 145,
-  weeklyTonnage: 1240,
-  activeCollectors: 28,
-  sortingViolations: 12,
-  completionRate: 94,
-  averageWeight: 12.5
+  name?: string;
+  legalName?: string;
+  municipalityIds?: string[];
+  fokontanyIds?: string[];
+  sectorIds?: string[];
+  regionId?: string;
+  districtId?: string;
+  status?: string;
+  type?: string;
 };
 
-export default function OperatorDashboard({ params }: { params: { operatorId: string } }) {
-  const { appUser } = useAuth();
-  const router = useRouter();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [pickups, setPickups] = useState<Pickup[]>(MOCK_PICKUPS);
-  const [kpiData, setKpiData] = useState<KPIData>(MOCK_KPI);
+type Fokontany = {
+  id: string;
+  name: string;
+  municipalityId: string;
+  arrondissementId: string | null;
+  type: "URBAN" | "RURAL";
+  geometry?: string;
+  sectorIds?: string[];
+  tgs?: {
+    cty: "MDG";
+    reg: {
+      name: string;
+      iso: string;
+      nrc: string;
+    };
+    dis: string;
+    com: string;
+    fkt: string;
+  };
+};
+
+export default function OperatorHomePage() {
+  const params = useParams<{ operatorId: string }>();
+  const operatorId = params.operatorId;
+
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  
-  // Filter states
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCollector, setSelectedCollector] = useState<string>('');
-  const [selectedBin, setSelectedBin] = useState<string>('');
-  const [selectedWasteType, setSelectedWasteType] = useState<string>('');
-  const [selectedStatus, setSelectedStatus] = useState<string>('');
-  const [dateRange, setDateRange] = useState({ start: '', end: '' });
-  const [showFilters, setShowFilters] = useState(false);
-  
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [operator, setOperator] = useState<Operator | null>(null);
+  const [fokontany, setFokontany] = useState<Fokontany[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchDashboardData();
-  }, [params.operatorId]);
+    if (!operatorId) return;
 
-  const fetchDashboardData = async () => {
-    setLoading(true);
-    try {
-      // TODO: Replace with actual API calls
-      // const kpi = await getOperatorKPI(params.operatorId);
-      // const pickupsData = await getOperatorPickups(params.operatorId);
-      // setKpiData(kpi);
-      // setPickups(pickupsData);
-      
-      // Using mock data for now
-      setTimeout(() => {
-        setKpiData(MOCK_KPI);
-        setPickups(MOCK_PICKUPS);
+    async function fetchOperatorHome() {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const operatorRef = doc(db, "operators", operatorId);
+        const operatorSnap = await getDoc(operatorRef);
+
+        if (!operatorSnap.exists()) {
+          setError("Operator not found.");
+          setOperator(null);
+          setFokontany([]);
+          return;
+        }
+
+        const operatorData = {
+          id: operatorSnap.id,
+          ...operatorSnap.data(),
+        } as Operator;
+
+        setOperator(operatorData);
+
+        const assignedFokontanyIds = operatorData.fokontanyIds ?? [];
+
+        if (assignedFokontanyIds.length > 0) {
+          const fokSnap = await getDocs(collection(db, "fokontany"));
+          const filtered = fokSnap.docs
+            .map((d) => ({ id: d.id, ...d.data() } as Fokontany))
+            .filter((f) => assignedFokontanyIds.includes(f.id));
+
+          setFokontany(filtered);
+        } else {
+          setFokontany([]);
+        }
+      } catch (err) {
+        console.error("Operator page fetch error:", err);
+        setError("Failed to load operator data.");
+      } finally {
         setLoading(false);
-      }, 500);
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-      setLoading(false);
+      }
     }
-  };
 
-  const refreshData = async () => {
-    setRefreshing(true);
-    await fetchDashboardData();
-    setRefreshing(false);
-  };
+    fetchOperatorHome();
+  }, [operatorId]);
 
-  const handleLogout = async () => {
-    if (isLoggingOut) return;
-    setIsLoggingOut(true);
-    try {
-      await signOut(auth);
-      window.location.href = '/';
-    } catch (error) {
-      console.error('Logout error:', error);
-      setIsLoggingOut(false);
-    }
-  };
+  const stats = useMemo(() => {
+    const municipalityCount = new Set(fokontany.map((f) => f.municipalityId)).size;
+    const arrondissementCount = new Set(
+      fokontany.map((f) => f.arrondissementId).filter(Boolean)
+    ).size;
+    const sectorCount = fokontany.reduce(
+      (acc, curr) => acc + (curr.sectorIds?.length ?? 0),
+      0
+    );
 
-  const exportToCSV = () => {
-    const filtered = getFilteredPickups();
-    const csv = [
-      ['ID', 'Collector', 'Bin', 'Location', 'Waste Type', 'Weight (kg)', 'Status', 'Timestamp', 'Violation'],
-      ...filtered.map(p => [
-        p.id, p.collectorName, p.binId, p.location, p.wasteType, p.weight, p.status, p.timestamp, p.violation ? 'Yes' : 'No'
-      ])
-    ].map(row => row.join(',')).join('\n');
-    
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `pickups_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
-
-  const getFilteredPickups = () => {
-    return pickups.filter(pickup => {
-      const matchesSearch = searchTerm === '' || 
-        pickup.collectorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        pickup.binId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        pickup.location.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesCollector = selectedCollector === '' || pickup.collectorId === selectedCollector;
-      const matchesBin = selectedBin === '' || pickup.binId === selectedBin;
-      const matchesWasteType = selectedWasteType === '' || pickup.wasteType === selectedWasteType;
-      const matchesStatus = selectedStatus === '' || pickup.status === selectedStatus;
-      
-      const matchesDate = (!dateRange.start || pickup.timestamp >= dateRange.start) &&
-                         (!dateRange.end || pickup.timestamp <= dateRange.end);
-      
-      return matchesSearch && matchesCollector && matchesBin && matchesWasteType && matchesStatus && matchesDate;
-    });
-  };
-
-  const getFilteredPickupsPaginated = () => {
-    const filtered = getFilteredPickups();
-    const start = (currentPage - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    return filtered.slice(start, end);
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch(status) {
-      case 'completed':
-        return <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800"><CheckCircle className="w-3 h-3 inline mr-1" /> Completed</span>;
-      case 'verified':
-        return <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800"><CheckCircle className="w-3 h-3 inline mr-1" /> Verified</span>;
-      case 'pending':
-        return <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800"><Clock className="w-3 h-3 inline mr-1" /> Pending</span>;
-      case 'rejected':
-        return <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800"><XCircle className="w-3 h-3 inline mr-1" /> Rejected</span>;
-      default:
-        return <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">{status}</span>;
-    }
-  };
-
-  const getWasteTypeIcon = (type: string) => {
-    const icons: Record<string, string> = {
-      organic: '🌱',
-      plastic: '🥤',
-      glass: '🍾',
-      paper: '📄',
-      electronic: '💻',
-      mixed: '🗑️'
+    return {
+      fokontanyCount: fokontany.length,
+      municipalityCount,
+      arrondissementCount,
+      sectorCount,
     };
-    return icons[type] || '🗑️';
-  };
-
-  const uniqueCollectors = [...new Map(pickups.map(p => [p.collectorId, { id: p.collectorId, name: p.collectorName }])).values()];
-  const uniqueBins = [...new Set(pickups.map(p => p.binId))];
-  const wasteTypes = ['organic', 'plastic', 'glass', 'paper', 'electronic', 'mixed'];
-  const statuses = ['completed', 'verified', 'pending', 'rejected'];
+  }, [fokontany]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+      <main className="min-h-screen bg-slate-950 text-white">
+        <div className="mx-auto flex min-h-screen max-w-7xl items-center justify-center px-6">
+          <Loader2 className="h-10 w-10 animate-spin text-teal-400" />
         </div>
-      </div>
+      </main>
+    );
+  }
+
+  if (error || !operator) {
+    return (
+      <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
+        <div className="mx-auto max-w-7xl">
+          <PageNavigation />
+          <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-6">
+            <h1 className="text-2xl font-bold text-white">Operator Home</h1>
+            <p className="mt-3 text-sm text-red-200/90">
+              {error ?? "Unable to load this operator."}
+            </p>
+            <Link
+              href="/operator"
+              className="mt-5 inline-flex items-center gap-2 rounded-lg bg-white/10 px-4 py-2 text-sm text-white transition hover:bg-white/20"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to operators
+            </Link>
+          </div>
+        </div>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <nav className="bg-white shadow-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-bold text-gray-900">Operator Dashboard</h1>
-              <span className="ml-3 px-2 py-1 text-xs bg-green-100 text-green-800 rounded">
-                {params.operatorId}
-              </span>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={refreshData}
-                disabled={refreshing}
-                className="p-2 text-gray-600 hover:text-gray-900 disabled:opacity-50"
-              >
-                <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
-              </button>
-              <span className="text-sm text-gray-600">
-                {appUser?.email?.split('@')[0] || 'Operator'}
-              </span>
-              <button 
-                onClick={handleLogout} 
-                disabled={isLoggingOut}
-                className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
-              >
-                {isLoggingOut ? 'Logging out...' : 'Sign out'}
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+    <main className="min-h-screen bg-slate-950 px-6 py-10 text-white">
+      <div className="mx-auto max-w-7xl">
+        <PageNavigation />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Today's Pickups</p>
-                <p className="text-2xl font-bold text-gray-900">{kpiData.todayPickups}</p>
-                <p className="text-xs text-green-600 mt-1">↑ 12% vs yesterday</p>
-              </div>
-              <div className="p-3 bg-green-100 rounded-full">
-                <Truck className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">7-Day Tonnage (kg)</p>
-                <p className="text-2xl font-bold text-gray-900">{kpiData.weeklyTonnage.toLocaleString()}</p>
-                <p className="text-xs text-green-600 mt-1">↑ 8% vs last week</p>
-              </div>
-              <div className="p-3 bg-blue-100 rounded-full">
-                <TrendingUp className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Active Collectors</p>
-                <p className="text-2xl font-bold text-gray-900">{kpiData.activeCollectors}</p>
-                <p className="text-xs text-gray-600 mt-1">Today's shift</p>
-              </div>
-              <div className="p-3 bg-purple-100 rounded-full">
-                <Users className="w-6 h-6 text-purple-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Sorting Violations</p>
-                <p className="text-2xl font-bold text-red-600">{kpiData.sortingViolations}</p>
-                <p className="text-xs text-red-600 mt-1">↑ 5% vs yesterday</p>
-              </div>
-              <div className="p-3 bg-red-100 rounded-full">
-                <AlertTriangle className="w-6 h-6 text-red-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Secondary KPI Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm text-gray-600">Collection Completion Rate</p>
-                <p className="text-2xl font-bold text-gray-900">{kpiData.completionRate}%</p>
-              </div>
-              <div className="w-16 h-16">
-                <svg className="transform -rotate-90" viewBox="0 0 36 36">
-                  <circle cx="18" cy="18" r="16" fill="none" className="stroke-current text-gray-200" strokeWidth="3" />
-                  <circle cx="18" cy="18" r="16" fill="none" className="stroke-current text-green-600" strokeWidth="3" 
-                    strokeDasharray={`${kpiData.completionRate}, 100`} />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
+        <section className="mb-8 rounded-3xl border border-white/10 bg-white/5 p-6 md:p-8">
+          <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
             <div>
-              <p className="text-sm text-gray-600">Average Pickup Weight</p>
-              <p className="text-2xl font-bold text-gray-900">{kpiData.averageWeight} kg</p>
-              <div className="mt-2 h-2 bg-gray-200 rounded-full">
-                <div className="h-2 bg-green-600 rounded-full" style={{ width: '65%' }}></div>
+              <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-teal-300/80">
+                <Building2 className="h-4 w-4" />
+                Operator home
               </div>
-              <p className="text-xs text-gray-600 mt-1">Target: 18 kg per pickup</p>
+              <h1 className="text-3xl font-bold tracking-tight">
+                {operator.name || operator.legalName || operator.id}
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm text-white/70">
+                Territorial operator overview connected to Firestore live data.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-slate-900/70 px-4 py-3 text-sm">
+              <div className="text-white/50">Status</div>
+              <div className="mt-1 font-semibold text-white">
+                {operator.status ?? "Unknown"}
+              </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Pickups Table Section */}
-        <div className="bg-white rounded-lg shadow">
-          {/* Table Header with Filters */}
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Recent Pickups</h2>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
-                >
-                  <Filter className="w-4 h-4 inline mr-2" />
-                  Filters
-                </button>
-                <button
-                  onClick={exportToCSV}
-                  className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
-                >
-                  <Download className="w-4 h-4 inline mr-2" />
-                  Export
-                </button>
-              </div>
+        <section className="mb-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+            <div className="flex items-center gap-2 text-sm text-white/70">
+              <MapPinned className="h-4 w-4 text-teal-400" />
+              Fokontany
             </div>
+            <div className="mt-3 text-3xl font-bold">{stats.fokontanyCount}</div>
+          </div>
 
-            {/* Search Bar */}
-            <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Search by collector, bin, or location..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              />
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+            <div className="flex items-center gap-2 text-sm text-white/70">
+              <Building2 className="h-4 w-4 text-teal-400" />
+              Municipalities
             </div>
+            <div className="mt-3 text-3xl font-bold">{stats.municipalityCount}</div>
+          </div>
 
-            {/* Advanced Filters */}
-            {showFilters && (
-              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mt-4 p-4 bg-gray-50 rounded-lg">
-                <select
-                  value={selectedCollector}
-                  onChange={(e) => setSelectedCollector(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg"
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+            <div className="flex items-center gap-2 text-sm text-white/70">
+              <Truck className="h-4 w-4 text-teal-400" />
+              Arrondissements
+            </div>
+            <div className="mt-3 text-3xl font-bold">{stats.arrondissementCount}</div>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+            <div className="flex items-center gap-2 text-sm text-white/70">
+              <BarChart3 className="h-4 w-4 text-teal-400" />
+              Sectors
+            </div>
+            <div className="mt-3 text-3xl font-bold">{stats.sectorCount}</div>
+          </div>
+        </section>
+
+        <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
+          <div className="mb-5 flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-teal-300/80">
+            <Users className="h-4 w-4" />
+            Assigned Fokontany
+          </div>
+
+          {fokontany.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-white/10 bg-black/10 p-10 text-center text-sm text-white/60">
+              No Fokontany linked to this operator yet.
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {fokontany.map((item) => (
+                <div
+                  key={item.id}
+                  className="rounded-2xl border border-white/10 bg-slate-900/60 p-5"
                 >
-                  <option value="">All Collectors</option>
-                  {uniqueCollectors.map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-
-                <select
-                  value={selectedBin}
-                  onChange={(e) => setSelectedBin(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg"
-                >
-                  <option value="">All Bins</option>
-                  {uniqueBins.map(bin => (
-                    <option key={bin} value={bin}>{bin}</option>
-                  ))}
-                </select>
-
-                <select
-                  value={selectedWasteType}
-                  onChange={(e) => setSelectedWasteType(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg"
-                >
-                  <option value="">All Waste Types</option>
-                  {wasteTypes.map(type => (
-                    <option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>
-                  ))}
-                </select>
-
-                <select
-                  value={selectedStatus}
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg"
-                >
-                  <option value="">All Statuses</option>
-                  {statuses.map(status => (
-                    <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>
-                  ))}
-                </select>
-
-                <div className="flex space-x-2">
-                  <input
-                    type="date"
-                    placeholder="Start Date"
-                    value={dateRange.start}
-                    onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
-                  />
-                  <input
-                    type="date"
-                    placeholder="End Date"
-                    value={dateRange.end}
-                    onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
-                  />
+                  <div className="text-xs uppercase tracking-[0.18em] text-teal-300/70">
+                    {item.type}
+                  </div>
+                  <h2 className="mt-2 text-xl font-semibold text-white">
+                    {item.name}
+                  </h2>
+                  <div className="mt-4 space-y-2 text-sm text-white/70">
+                    <p>Municipality: {item.municipalityId}</p>
+                    <p>Arrondissement: {item.arrondissementId ?? "N/A"}</p>
+                    <p>Sectors: {item.sectorIds?.length ?? 0}</p>
+                    <p>Region: {item.tgs?.reg?.name ?? "N/A"}</p>
+                    <p>ISO: {item.tgs?.reg?.iso ?? "N/A"}</p>
+                    <p>NRC: {item.tgs?.reg?.nrc ?? "N/A"}</p>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-
-          {/* Pickups Table */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Collector</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bin ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waste Type</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Weight</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Violation</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {getFilteredPickupsPaginated().map((pickup) => (
-                  <tr key={pickup.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{pickup.collectorName}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{pickup.binId}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{pickup.location}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {getWasteTypeIcon(pickup.wasteType)} {pickup.wasteType}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{pickup.weight} kg</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(pickup.status)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {pickup.violation ? (
-                        <span className="text-red-600 text-sm" title={pickup.violationType}>
-                          ⚠️ Yes
-                        </span>
-                      ) : (
-                        <span className="text-green-600 text-sm">✓ No</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {new Date(pickup.timestamp).toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <button className="text-green-600 hover:text-green-800">
-                        <Eye className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          <div className="px-6 py-4 border-t border-gray-200 flex justify-between items-center">
-            <p className="text-sm text-gray-600">
-              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, getFilteredPickups().length)} of {getFilteredPickups().length} results
-            </p>
-            <div className="flex space-x-2">
-              <button
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1 text-sm text-gray-600 bg-gray-100 rounded disabled:opacity-50"
-              >
-                Previous
-              </button>
-              <button
-                onClick={() => setCurrentPage(p => p + 1)}
-                disabled={currentPage * itemsPerPage >= getFilteredPickups().length}
-                className="px-3 py-1 text-sm text-gray-600 bg-gray-100 rounded disabled:opacity-50"
-              >
-                Next
-              </button>
+              ))}
             </div>
-          </div>
-        </div>
-      </main>
-    </div>
+          )}
+        </section>
+      </div>
+    </main>
   );
 }

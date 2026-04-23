@@ -153,11 +153,24 @@ export default function Page() {
    * Fetches and displays individual operator impact metrics
    */
   function OperatorCard({ operator }: { operator: Operator }) {
+    const { appUser, loading: authLoading } = useAuth(); // Access auth state
     const [impact, setImpact] = useState<any>(null);
     const [isLoadingImpact, setIsLoadingImpact] = useState(true);
-
+  
     useEffect(() => {
       async function loadImpact() {
+        // Skip if auth is still loading
+        if (authLoading) {
+          setIsLoadingImpact(false);
+          return;
+        }
+  
+        // Skip if no authenticated user (or if you want to restrict to specific roles)
+        if (!appUser) {
+          setIsLoadingImpact(false);
+          return;
+        }
+  
         try {
           const data = await getOperatorImpact(operator.id);
           setImpact(data);
@@ -167,27 +180,33 @@ export default function Page() {
           setIsLoadingImpact(false);
         }
       }
+  
       loadImpact();
-    }, [operator.id]);
-
+    }, [operator.id, authLoading, appUser]);
+  
     if (isLoadingImpact) {
-      return <div className="card">Loading operator data...</div>;
+      return (
+        <div className="card">
+          <div className="card-loading">Loading operator data...</div>
+        </div>
+      );
     }
-
+  
     return (
       <div className="card">
         <h3>{operator.name}</h3>
         <p>{operator.city}</p>
         <p>{operator.type}</p>
-        <p>Households: {impact?.households || 0}</p>
-        <p>Kg: {impact?.kg || 0}</p>
-        <p>SOM: {impact?.som || 0}%</p>
+        <p>Households: {impact?.households ?? 0}</p>
+        <p>Kg: {impact?.kg ?? 0}</p>
+        <p>SOM: {impact?.som ?? 0}%</p>
         <a href={`/operator/${operator.id}`} className="button">
           View Details
         </a>
       </div>
     );
   }
+  
 
   // ----------------------------------------
   // 3e. HANDLER FUNCTIONS
@@ -237,6 +256,9 @@ export default function Page() {
       </div>
     );
   }
+
+
+
 
   // ----------------------------------------
   // 3g. MAIN RENDER

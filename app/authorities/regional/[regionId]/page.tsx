@@ -1,54 +1,65 @@
-"use client";
-
-import { useRouter, useParams } from "next/navigation";
-import { 
+import {
   ArrowLeft, X, Home, Layers, Users, Map, Truck,
-  BarChart3, FileText, LocateFixed 
+  BarChart3, FileText, LocateFixed
 } from "lucide-react";
 import Link from "next/link";
 import PageNavigation from "@/components/PageNavigation";
 
+export async function generateStaticParams() {
+  return [
+    { regionId: "1" },
+    { regionId: "2" },
+    { regionId: "3" },
+    { regionId: "4" },
+  ];
+}
 
+type PageProps = {
+  params: Promise<{
+    regionId: string;
+  }>;
+};
 
-export default function RegionalDashboard() {
-  const params = useParams();
-  const regionId = params.regionId;
+export default async function RegionalDashboard({ params }: PageProps) {
+  const { regionId } = await params;
 
   const subRoutes = [
-    { name: "Dashboard", icon: <Layers />, path: "dashboard", desc: "Regional Overview" },
-    { name: "Metrics", icon: <BarChart3 />, path: "metrics", desc: "Aggregated Statistics" },
-    { name: "Operators", icon: <Truck />, path: "operators", desc: "Multi-Zone Partners" },
-    { name: "Reports", icon: <FileText />, path: "reports", desc: "Regional Analytics" },
-    { name: "Zones", icon: <Map />, path: "zones", desc: "Inter-Communal Mapping" },
+    { name: "Dashboard", icon: Home, path: `/authorities/regional/${regionId}`, desc: "Regional overview" },
+    { name: "Zones", icon: Layers, path: `/authorities/regional/${regionId}/zones`, desc: "Manage zones" },
+    { name: "Officers", icon: Users, path: `/authorities/regional/${regionId}/officers`, desc: "Regional staff" },
+    { name: "Map", icon: Map, path: `/authorities/regional/${regionId}/map`, desc: "Coverage map" },
+    { name: "Vehicles", icon: Truck, path: `/authorities/regional/${regionId}/vehicles`, desc: "Fleet and transport" },
+    { name: "Reports", icon: FileText, path: `/authorities/regional/${regionId}/reports`, desc: "Regional reports" },
+    { name: "Analytics", icon: BarChart3, path: `/authorities/regional/${regionId}/analytics`, desc: "Performance metrics" },
+    { name: "Locations", icon: LocateFixed, path: `/authorities/regional/${regionId}/locations`, desc: "Tracked locations" },
   ];
 
   return (
-    <div className="flex flex-col items-center px-6 pb-20 pt-12 text-blue-50">
-      <div className="w-full max-w-6xl">
-        <PageNavigation />
+    <div>
+      <PageNavigation />
 
-        <header className="mb-12 text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-white drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">
-            Regional Authority: {regionId}
-          </h1>
-          <p className="mt-4 text-lg text-blue-200 font-medium">Inter-Communal Coordination & Infrastructure</p>
-        </header>
+      <div className="mb-4">
+        <Link href="/authorities/regional" className="inline-flex items-center gap-2">
+          <ArrowLeft size={18} />
+          Back
+        </Link>
+      </div>
 
-        <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-5">
-          {subRoutes.map((route) => (
-            <Link 
-              key={route.path} 
-              href={`/authorities/regional/${regionId}/${route.path}`}
-              className="glass-card flex flex-col items-center rounded-xl border border-blue-400/20 bg-blue-950/40 p-6 text-center backdrop-blur-md transition-all hover:bg-blue-900/50 hover:scale-105"
-            >
-              <div className="mb-4 text-blue-400">
-                {route.icon}
+      <h1 className="text-2xl font-bold mb-6">Regional Dashboard: {regionId}</h1>
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {subRoutes.map((route) => {
+          const Icon = route.icon;
+          return (
+            <Link key={route.name} href={route.path} className="rounded-xl border p-4 hover:bg-gray-50">
+              <div className="flex items-center gap-3 mb-2">
+                <Icon size={20} />
+                <h2 className="font-semibold">{route.name}</h2>
               </div>
-              <h3 className="text-lg font-bold text-white">{route.name}</h3>
-              <p className="mt-2 text-xs text-blue-200/70">{route.desc}</p>
+              <p className="text-sm text-gray-600">{route.desc}</p>
             </Link>
-          ))}
-        </div>
+          );
+        })}
       </div>
     </div>
   );

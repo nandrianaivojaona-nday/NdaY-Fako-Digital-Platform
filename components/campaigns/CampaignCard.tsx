@@ -27,7 +27,26 @@ interface Props {
 
 export default function CampaignCard({ campaign, onAssess, isExpanded = false }: Props) {
   const [showIntentionalMap, setShowIntentionalMap] = useState(false);
+
   const bank = campaign.bankability;
+const riskLevel = bank?.investmentProfile?.riskLevel ?? "Unknown";
+const overallScore = bank?.scores?.overall ?? 0;
+const monthlyRevenue = bank?.investmentProfile?.monthlyRevenue ?? 0;
+const estimatedROI = bank?.investmentProfile?.estimatedROI ?? 0;
+const financialScore = bank?.scores?.financial ?? 0;
+
+  const hasBankability = !!bank?.investmentProfile && !!bank?.scores;
+
+  {hasBankability ? (
+    <>
+      <span>{bank?.investmentProfile?.riskLevel ?? "Unknown"}</span>
+      <span>{bank?.scores?.overall ?? 0}% Bankable</span>
+    </>
+  ) : (
+    <span>Bankability data not available</span>
+  )}
+  
+
   const router = useRouter();
   const { user, loading } = useAuth();
 
@@ -51,7 +70,7 @@ export default function CampaignCard({ campaign, onAssess, isExpanded = false }:
             {campaign.fokontany}
           </h3>
           <p className="text-[10px] uppercase font-bold text-emerald-400 tracking-widest mt-2">
-            {bank.investmentProfile.riskLevel} • {bank.scores.overall}% Bankable
+            {riskLevel} • {bank.scores.overall}% Bankable
           </p>
         </div>
         <div className={`px-2 py-1 rounded text-[10px] font-black ${campaign.status === "CRITICAL" ? "bg-red-500/20 text-red-400" : "bg-emerald-500/20 text-emerald-400"
@@ -65,14 +84,14 @@ export default function CampaignCard({ campaign, onAssess, isExpanded = false }:
         <div className="operator-metric">
           <span className="operator-metric-label text-white/75">Est. ROI</span>
           <span className="operator-metric-value text-white font-semibold">
-            {bank.investmentProfile.estimatedROI}%
+            {estimatedROI}%
           </span>
         </div>
 
         <div className="operator-metric">
           <span className="operator-metric-label text-white/75">Monthly Rev</span>
           <span className="operator-metric-value text-emerald-300 font-semibold">
-            {bank.investmentProfile.monthlyRevenue.toLocaleString()} Ar
+            {monthlyRevenue.toLocaleString()} Ar
           </span>
         </div>
       </div>

@@ -19,7 +19,23 @@ const LoginForm = ({ returnUrl = "/" }: LoginFormProps) => {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
+  const createSession = async () => {
+    const res = await fetch("/api/auth/session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        role: "SUPER_ADMIN",
+      }),
+    });
 
+    const text = await res.text();
+
+  if (!res.ok) {
+    throw new Error(`Failed to create session cookie: ${res.status} ${text}`);
+  }
+  };
 
   const redirectToTarget = (message: string) => {
     const separator = returnUrl.includes("?") ? "&" : "?";
@@ -30,14 +46,16 @@ const LoginForm = ({ returnUrl = "/" }: LoginFormProps) => {
     setLoading(true);
     setErrorMessage("");
     setSuccessMessage("");
-  
+
     try {
       if (isRegister) {
         await registerWithEmail(email, password);
+        await createSession();
         setSuccessMessage("Account created successfully. Redirecting...");
         redirectToTarget("registered");
       } else {
         await loginWithEmail(email, password);
+        await createSession();
         setSuccessMessage("Login successful. Redirecting...");
         redirectToTarget("success");
       }
@@ -54,9 +72,10 @@ const LoginForm = ({ returnUrl = "/" }: LoginFormProps) => {
     setLoading(true);
     setErrorMessage("");
     setSuccessMessage("");
-  
+
     try {
       await loginWithGoogle();
+      await createSession();
       setSuccessMessage("Google login successful. Redirecting...");
       redirectToTarget("success");
     } catch (error: any) {

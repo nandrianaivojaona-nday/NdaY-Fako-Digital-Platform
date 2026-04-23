@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
     '192.168.88.*',       // Wildcard for entire subnet (if supported)
     '*.local',            // For .local domains (e.g., macbook.local)
   ],
+ // output: "export",
   turbopack: {
     root: path.join(__dirname),
   },

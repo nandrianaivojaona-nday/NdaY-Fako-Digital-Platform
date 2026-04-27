@@ -16,7 +16,8 @@ export type Role =
   | "municipality_admin"
   | "operator_admin"
   | "collector"
-  | "citizen";
+  | "citizen"
+  | "admin";
 
 
 

@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, getDocs } from "firebase/firestore";
-import { auth, db } from "@/lib/firebase";
-
+import { getAuthClient, getDb } from "@/lib/firebase";
+const auth = getAuthClient();
+const db = getDb();
 export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);

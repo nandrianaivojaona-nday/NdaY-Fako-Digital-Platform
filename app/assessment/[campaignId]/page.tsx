@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { doc, onSnapshot, query, where } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { getDb } from "@/lib/firebase";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useAssessmentDraft } from "@/hooks/useAssessmentDraft";
 import { watchDraftSync } from "@/lib/watchDraftSync";
@@ -63,7 +63,7 @@ export default function AssessmentPage() {
 
   const stakeIntent = searchParams.get("stake") === "true";
   const requestedStep = searchParams.get("step");
-
+  const db = getDb();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [campaignLoading, setCampaignLoading] = useState(true);
   const [campaignError, setCampaignError] = useState<string | null>(null);

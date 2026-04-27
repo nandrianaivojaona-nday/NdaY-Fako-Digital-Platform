@@ -6,6 +6,7 @@ import {
   useEffect,
   useState,
 } from "react";
+
 import {
   onAuthStateChanged,
   signInWithPopup,
@@ -14,10 +15,24 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
 } from "firebase/auth";
-import { auth, googleProvider } from "@/lib/firebase";
+
+import { doc, getDoc, setDoc } from "firebase/firestore";
+
+import { getAuthClient, getDb, getGoogleProvider } from "@/lib/firebase";
+
+/* =========================
+   TYPES
+========================= */
+
+type AppUser = {
+  uid: string;
+  email: string | null;
+  role: "ADMIN" | "OPERATOR" | "CITIZEN";
+};
 
 type AuthContextType = {
   user: User | null;
+  appUser: AppUser | null;
   loading: boolean;
   loginWithGoogle: () => Promise<void>;
   loginWithEmail: (email: string, password: string) => Promise<void>;
@@ -25,79 +40,90 @@ type AuthContextType = {
   logout: () => Promise<void>;
 };
 
+/* =========================
+   CONTEXT
+========================= */
+
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export const AuthProvider = ({
-  children,
-}: {
-  children: React.ReactNode;
-}) => {
+/* =========================
+   PROVIDER
+========================= */
+
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [appUser, setAppUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // 🔄 Session persistence
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-      setLoading(false);
+    if (typeof window === "undefined") return;
 
-      // 👉 Hook for DB sync later
+    const auth = getAuthClient();
+    const db = getDb();
+
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setUser(firebaseUser);
+
       if (firebaseUser) {
-        console.log("User logged in:", firebaseUser.email);
+        const ref = doc(db, "users", firebaseUser.uid);
+        const snap = await getDoc(ref);
+
+        if (!snap.exists()) {
+          const newUser: AppUser = {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            role: "CITIZEN", // default role
+          };
+
+          await setDoc(ref, newUser);
+          setAppUser(newUser);
+        } else {
+          setAppUser(snap.data() as AppUser);
+        }
+      } else {
+        setAppUser(null);
       }
+
+      setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
 
-  // ✉️ Email login
+  /* =========================
+     ACTIONS
+  ========================= */
+
   const loginWithEmail = async (email: string, password: string) => {
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (error) {
-      console.error("Email login error:", error);
-    }
+    const auth = getAuthClient();
+    await signInWithEmailAndPassword(auth, email, password);
   };
 
-  // 🆕 Email registration
   const registerWithEmail = async (email: string, password: string) => {
-    try {
-      const res = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-
-      console.log("User registered:", res.user.email);
-
-      // 👉 TODO: create user profile in DB
-    } catch (error) {
-      console.error("Register error:", error);
-    }
+    const auth = getAuthClient();
+    await createUserWithEmailAndPassword(auth, email, password);
   };
 
-  // ⚡ Google login (secondary)
   const loginWithGoogle = async () => {
-    try {
-      const res = await signInWithPopup(auth, googleProvider);
-
-      console.log("Google login:", res.user.email);
-
-      // 👉 TODO: ensure user exists in DB
-    } catch (error) {
-      console.error("Google login error:", error);
-    }
+    const auth = getAuthClient();
+    const provider = getGoogleProvider();
+    await signInWithPopup(auth, provider);
   };
 
-  // 🚪 Logout
   const logout = async () => {
+    const auth = getAuthClient();
     await signOut(auth);
   };
+
+  /* =========================
+     PROVIDER VALUE
+  ========================= */
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        appUser,
         loading,
         loginWithGoogle,
         loginWithEmail,
@@ -110,7 +136,10 @@ export const AuthProvider = ({
   );
 };
 
-// Hook
+/* =========================
+   HOOK
+========================= */
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

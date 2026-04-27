@@ -15,6 +15,7 @@ import CampaignCard from "@/components/campaigns/CampaignCard";
 
 // Hooks & Types
 import { useAuth } from "@/hooks/useAuth";
+// import { useAuth} from "@/components/auth/AuthProvider";
 import type { Operator } from "@/types/operator";
 import { ExtendedCampaign as Campaign } from "@/lib/types";
 
@@ -67,7 +68,7 @@ export default function Page() {
   // ----------------------------------------
   // 3a. AUTHENTICATION & ROUTING
   // ----------------------------------------
-  const { appUser, loading: authLoading } = useAuth();
+  const { user: appUser, loading: authLoading } = useAuth();
   const router = useRouter();
 
   // Redirect logged-in users to dashboard
@@ -153,7 +154,7 @@ export default function Page() {
    * Fetches and displays individual operator impact metrics
    */
   function OperatorCard({ operator }: { operator: Operator }) {
-    const { appUser, loading: authLoading } = useAuth(); // Access auth state
+    const { user: appUser, loading: authLoading } = useAuth(); // Access auth state
     const [impact, setImpact] = useState<any>(null);
     const [isLoadingImpact, setIsLoadingImpact] = useState(true);
   

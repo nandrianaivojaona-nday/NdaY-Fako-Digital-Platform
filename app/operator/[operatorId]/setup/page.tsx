@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+// import { useAuth } from '@/components/auth/AuthProvider';
 import { updateOperatorProfile } from '@/hooks/useOperatorProfile';
 import { useCollectors, type Collector } from '@/hooks/useCollectors';
 
@@ -9,11 +10,11 @@ import { useCollectors, type Collector } from '@/hooks/useCollectors';
 export default function OperatorSetup() {
   const params = useParams();
   const operatorId = params.operatorId as string;
-  const { appUser, loading } = useAuth();
+  const { user: appUser, loading: loading } = useAuth();
 
   if (loading) return <div>Loading...</div>;
   
-  if (!appUser || (appUser.role !== 'operator_admin' && appUser.role !== 'super_admin')) {
+  if (!appUser || (appUser?.role !== 'operator_admin' && appUser?.role !== 'super_admin')) {
     return <div className="p-8 text-center">Access denied</div>;
   }
   

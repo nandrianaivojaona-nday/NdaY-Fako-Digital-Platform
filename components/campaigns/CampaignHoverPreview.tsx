@@ -22,8 +22,7 @@ export function CampaignHoverPreview({
   if (!bankability) return null;
   if (!bankability?.investmentProfile || !bankability?.scores) {
     return null;
-  }
-  
+  }  
 
   // CampaignHoverPreview.tsx — REPLACE the entire return statement with:
   return (

@@ -1,6 +1,6 @@
 // lib/queries.ts
 
-import { db } from "@/lib/firebase";
+import { getDb } from "@/lib/firebase";
 import { Operator } from "@/types/operator";
 import {
   collection,
@@ -14,6 +14,7 @@ import {
 import {
   ImpactMetrics,
 } from "@/types/metrics";
+import { db } from "@/services/firebase";
 
 
 
@@ -23,7 +24,7 @@ import {
 // ==============================
 
 export async function getPublicOperators(): Promise<Operator[]> {
-
+  const db = getDb();
   const q = query(
     collection(db, "operators"),
     where("isPublic", "==", true),

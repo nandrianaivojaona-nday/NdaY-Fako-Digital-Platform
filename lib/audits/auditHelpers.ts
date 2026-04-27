@@ -5,12 +5,20 @@ import {
     addDoc,
     serverTimestamp,
   } from "firebase/firestore";
+
+  import {useEffect, useState} from "react"
   
-  import { db } from "@/lib/firebase";
+  import { getDb } from "@/lib/firebase";
   
   import { generateAuditId } from "./generateAuditId";
   import { AuditForm } from "./auditTypes";
   
+  const [db, setDb] = useState<any>(null);
+
+useEffect(() => {
+  const firestore = getDb();
+  setDb(firestore);
+}, []);
   
   export async function saveAudit(
     form: AuditForm,

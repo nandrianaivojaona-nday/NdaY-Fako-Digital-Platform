@@ -4,9 +4,18 @@ import {
     setDoc,
     serverTimestamp,
   } from "firebase/firestore";
-  import { db } from "@/lib/firebase";
+  import { getDb } from "@/lib/firebase";
+  import {useEffect, useState} from "react"
   import { AssessmentDraft } from "@/types/campaign";
   
+
+  const [db, setDb] = useState<any>(null);
+
+useEffect(() => {
+  const firestore = getDb();
+  setDb(firestore);
+}, []);
+
   export async function syncDraftToFirestore(
     campaignId: string,
     operatorId: string,

@@ -9,10 +9,17 @@ import {
   where,
 } from "firebase/firestore";
 
-import { db } from "@/lib/firebase";
+import { getDb } from "@/lib/firebase";
 
 import { StepProps } from "@/lib/audits/auditTypes";
 
+
+const [db, setDb] = useState<any>(null);
+
+useEffect(() => {
+  const firestore = getDb();
+  setDb(firestore);
+}, []);
 
 export default function StepRecommendation({
   form,

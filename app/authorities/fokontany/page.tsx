@@ -12,7 +12,7 @@ import {
     X,
 } from "lucide-react";
 import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { getDb } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import PageNavigation from '@/components/PageNavigation'
 
@@ -28,7 +28,12 @@ interface FokontanyData {
   performance: number;
 }
 
+const [db, setDb] = useState<any>(null);
 
+useEffect(() => {
+  const firestore = getDb();
+  setDb(firestore);
+}, []);
 
 export default function AuthoritiesFokontanyPage() {
   const [allFokontany, setAllFokontany] = useState<FokontanyData[]>([]);

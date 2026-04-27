@@ -8,7 +8,7 @@ import {
   BarChart3, Target, TrendingUp, TrendingDown, Building2 
 } from "lucide-react";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { getDb } from "@/lib/firebase";
 
 interface FokontanyData {
     id: string;
@@ -19,6 +19,13 @@ interface FokontanyData {
     arrondissementId: string; // From DB: "ARRO4-CUA"
     performance: number;    // Calculated metric for benchmarking
 }
+
+const [db, setDb] = useState<any>(null);
+
+useEffect(() => {
+  const firestore = getDb();
+  setDb(firestore);
+}, []);
 
 export default function FokontanyConsolidatedPage() {
   const [fokontanyList, setFokontanyList] = useState<FokontanyData[]>([]);

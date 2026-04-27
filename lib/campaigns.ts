@@ -1,7 +1,15 @@
 import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { getDb } from "@/lib/firebase";
 import { Campaign } from "@/types/campaign";
+import {useState, useEffect} from "react"
 
+
+const [db, setDb] = useState<any>(null);
+
+useEffect(() => {
+  const firestore = getDb();
+  setDb(firestore);
+}, []);
 
 export async function getCampaigns(): Promise<Campaign[]> {
   const snapshot = await getDocs(collection(db, "campaigns"));

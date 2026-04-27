@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Logo from "@/components/Logo";
 import { WASTE_COLLECT_PLAN_CATEGORIES } from "@/lib/waste_collect_plans";
 import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { getDb } from "@/lib/firebase";
 
 // 1. Move the constant outside or define its type properly
 const DEFAULT_OPERATOR = {
@@ -13,6 +13,13 @@ const DEFAULT_OPERATOR = {
   city: "National Coverage",
   description: "Official Platform Service Provider"
 };
+
+const [db, setDb] = useState<any>(null);
+
+useEffect(() => {
+  const firestore = getDb();
+  setDb(firestore);
+}, []);
 
 export default function CitizenPage() {
   const [categoryId, setCategoryId] = useState(WASTE_COLLECT_PLAN_CATEGORIES[0].id);

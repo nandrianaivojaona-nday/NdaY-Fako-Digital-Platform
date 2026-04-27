@@ -1,7 +1,15 @@
 "use client";
 
-import { db } from "@/lib/firebase";
+import { getDb } from "@/lib/firebase";
+import { useState, useEffect } from "react";
 import { doc, setDoc } from "firebase/firestore";
+
+const [db, setDb] = useState<any>(null);
+
+useEffect(() => {
+  const firestore = getDb();
+  setDb(firestore);
+}, []);
 
 async function initMVP() {
   // CLUSTERS

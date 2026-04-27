@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { getDb } from "@/lib/firebase";
 
 /* -------------------- TYPES -------------------- */
 
@@ -32,6 +32,13 @@ type StepProps = {
   form: AuditForm;
   setForm: React.Dispatch<React.SetStateAction<AuditForm>>;
 };
+
+const [db, setDb] = useState<any>(null);
+
+useEffect(() => {
+  const firestore = getDb();
+  setDb(firestore);
+}, []);
 
 /* -------------------- STEP: LOCATION -------------------- */
 

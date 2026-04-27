@@ -1,6 +1,15 @@
 // lib/watchDraftSync.ts
 import { doc, onSnapshot } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { getDb } from "@/lib/firebase";
+import {useEffect, useState} from "react"
+
+const [db, setDb] = useState<any>(null);
+
+useEffect(() => {
+  const firestore = getDb();
+  setDb(firestore);
+}, []);
+
 
 export function watchDraftSync(
   campaignId: string,

@@ -5,13 +5,20 @@ import { useRouter } from "next/navigation";
 import Logo from "@/components/Logo";
 import { WASTE_COLLECT_PLAN_CATEGORIES } from "@/lib/waste_collect_plans";
 import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { getDb } from "@/lib/firebase";
 
 type Props = {
   params: Promise<{
     planId: string;
   }>;
 };
+
+const [db, setDb] = useState<any>(null);
+
+useEffect(() => {
+  const firestore = getDb();
+  setDb(firestore);
+}, []);
 
 export default function SubscribePage({ params }: Props) {
   const router = useRouter();

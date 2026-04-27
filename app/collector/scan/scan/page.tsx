@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { getDb } from "@/lib/firebase";
 import {
   Scan,
   MapPin,
@@ -19,6 +19,13 @@ type ScannedHousehold = {
   sector: string;
   status: string;
 };
+
+const [db, setDb] = useState<any>(null);
+
+useEffect(() => {
+  const firestore = getDb();
+  setDb(firestore);
+}, []);
 
 export default function CollectorMobileView() {
   const [isScanning, setIsScanning] = useState(false);

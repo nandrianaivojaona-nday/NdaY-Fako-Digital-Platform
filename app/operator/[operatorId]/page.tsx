@@ -13,7 +13,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { getDb } from "@/lib/firebase";
 import PageNavigation from "@/components/PageNavigation";
 
 type Operator = {
@@ -49,6 +49,13 @@ type Fokontany = {
     fkt: string;
   };
 };
+
+const [db, setDb] = useState<any>(null);
+
+useEffect(() => {
+  const firestore = getDb();
+  setDb(firestore);
+}, []);
 
 export default function OperatorHomePage() {
   const params = useParams<{ operatorId: string }>();

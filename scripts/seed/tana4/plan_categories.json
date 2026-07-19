@@ -1,0 +1,38 @@
+[
+  {
+    "id": "household",
+    "name": "Households",
+    "description": "Individual homes and apartments",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "buildings",
+    "name": "Buildings & Residences",
+    "description": "Apartments, residences",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "schools",
+    "name": "Schools",
+    "description": "Primary and secondary schools",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "business",
+    "name": "Business & Admin",
+    "description": "Offices and SMEs",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "hospitality",
+    "name": "Hotels & Events",
+    "description": "Hotels, venues, events",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "vip",
+    "name": "VIP",
+    "description": "High-touch service",
+    "status": "ACTIVE"
+  }
+]

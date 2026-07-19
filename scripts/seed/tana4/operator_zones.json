@@ -1,0 +1,13 @@
+[
+    {
+      "id": "ZONE-OP001-CUA-04-MAH",
+  
+      "operatorId": "OP001",
+  
+      "municipalityId": "CUA",
+      "arrondissementId": "CUA-04",
+      "fokontanyId": "CUA-04-MAH",
+  
+      "status": "ACTIVE"
+    }
+  ]

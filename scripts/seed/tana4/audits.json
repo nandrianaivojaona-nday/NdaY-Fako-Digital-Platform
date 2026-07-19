@@ -1,0 +1,79 @@
+[
+    {
+      "id": "AUD001-FKT01-ARR04-CUA",
+  
+      "campaignId": "campaign_mvp_4th",
+  
+      "municipalityId": "cua",
+      "arrondissementId": "ARR04",
+      "fokontanyId": "FKT01",
+  
+      "clusterName": "Mahamasina",
+  
+      "buildingName": "Villa Rakoto",
+  
+      "buildingType": "villa",
+  
+      "address": "Mahamasina",
+  
+      "ownerName": "Rakoto",
+      "ownerPhone": "0340000000",
+  
+      "estimatedPeople": 6,
+      "estimatedBagsPerWeek": 7,
+  
+      "salesStatus": "audited",
+      "auditStatus": "draft"
+    },
+    {
+      "id": "AUD002-FKT02-ARR04-CUA",
+  
+      "campaignId": "campaign_mvp_4th",
+  
+      "municipalityId": "CUA",
+      "arrondissementId": "ARR04",
+      "fokontanyId": "FKT01",
+  
+      "clusterName": "Ankadimbahoaka",
+  
+      "buildingName": "Residence ",
+  
+      "buildingType": "residence",
+  
+      "address": "Ankadimbahoaka",
+  
+      "ownerName": "Soa",
+      "ownerPhone": "0340000001",
+  
+      "estimatedPeople": 4,
+      "estimatedBagsPerWeek": 5,
+  
+      "salesStatus": "audited",
+      "auditStatus": "draft"
+    },
+    {
+        "id": "AUD001-FKT01-01-CRAL",
+      
+        "campaignId": "CMP-CRAL-2026",
+      
+        "municipalityId": "CRAL",
+      
+        "district": null,
+      
+        "fokontany": "FKT01-CRAL",
+      
+        "fokontanyName": "Alasora Centre",
+      
+        "clusterName": "Alasora",
+      
+        "buildingName": "Villa Kolomahasoa",
+      
+        "buildingType": "villa",
+      
+        "estimatedPeople": 5,
+      
+        "salesStatus": "audited",
+      
+        "auditStatus": "draft"
+      }
+  ]

@@ -1,0 +1,97 @@
+{
+  "type": "FeatureCollection",
+  "name": "NdaY_Fokontany_Production",
+  "features": [
+
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "ANA-CUA-ARR4-ANKADIMBAHOAKA-OUEST",
+        "name": "Ouest Ankadimbahoaka",
+        "type": "URBAN",
+        "geometryType": "POLYGON"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [47.5058,-18.9168],
+          [47.5108,-18.9172],
+          [47.5122,-18.9208],
+          [47.5092,-18.9230],
+          [47.5052,-18.9212],
+          [47.5048,-18.9185],
+          [47.5058,-18.9168]
+        ]]
+      }
+    },
+
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "ANA-CUA-ARR4-SOANIERANA-III-I",
+        "name": "Soanierana III I",
+        "type": "URBAN",
+        "geometryType": "POLYGON"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [47.5115,-18.9190],
+          [47.5165,-18.9198],
+          [47.5175,-18.9235],
+          [47.5135,-18.9250],
+          [47.5108,-18.9220],
+          [47.5115,-18.9190]
+        ]]
+      }
+    },
+
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "ANA-CUA-ARR4-TSARAFARITRA",
+        "name": "Tsarafaritra",
+        "type": "URBAN",
+        "geometryType": "POLYGON"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [47.5035,-18.9178],
+          [47.5072,-18.9185],
+          [47.5080,-18.9220],
+          [47.5055,-18.9240],
+          [47.5025,-18.9215],
+          [47.5035,-18.9178]
+        ]]
+      }
+    },
+
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "ANA-ALASORA-ALASORA",
+        "name": "Alasora",
+        "type": "RURAL",
+        "geometryType": "CENTER_RADIUS",
+        "center": [47.5765,-18.9085],
+        "radius": 1200
+      },
+      "geometry": null
+    },
+
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "VAT-RANOMAFANA-I",
+        "name": "Ranomafana I",
+        "type": "RURAL",
+        "geometryType": "CENTER_RADIUS",
+        "center": [47.6525,-21.2530],
+        "radius": 2500
+      },
+      "geometry": null
+    }
+
+  ]
+}

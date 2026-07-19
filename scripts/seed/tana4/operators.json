@@ -1,0 +1,11 @@
+[
+    {
+      "id": "OP001",
+      "name": "NdaY Pilot",
+      "city": "Antananarivo",
+      "type": "private",
+      "isPublic": true,
+      "status": "ACTIVE",
+      "createdAt": 0
+    }
+  ]

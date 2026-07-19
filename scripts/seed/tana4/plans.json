@@ -1,0 +1,118 @@
+[
+  {
+    "id": "HH-STARTER",
+    "categoryId": "household",
+    "name": "Starter",
+    "segment": "household",
+    "billing": "per_pickup",
+    "frequency": "On-demand",
+    "maxBins": 2,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "HH-STANDARD",
+    "categoryId": "household",
+    "name": "Standard Weekly",
+    "segment": "household",
+    "billing": "monthly",
+    "frequency": "1 pickup / week",
+    "frequencyPerWeek": 1,
+    "maxBins": 3,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "HH-FAMILY",
+    "categoryId": "household",
+    "name": "Family",
+    "segment": "household",
+    "billing": "monthly",
+    "frequency": "2 pickups / week",
+    "frequencyPerWeek": 2,
+    "maxBins": 5,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "HH-ECO",
+    "categoryId": "household",
+    "name": "Eco Sort",
+    "segment": "household",
+    "billing": "monthly",
+    "frequency": "1 pickup / week",
+    "frequencyPerWeek": 1,
+    "maxBins": 3,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "BLD-SMALL",
+    "categoryId": "buildings",
+    "name": "Small Residence",
+    "segment": "building",
+    "billing": "monthly",
+    "frequency": "2 pickups / week",
+    "maxBins": 10,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "BLD-LARGE",
+    "categoryId": "buildings",
+    "name": "Large Residence",
+    "segment": "building",
+    "billing": "monthly",
+    "frequency": "3–6 pickups / week",
+    "maxBins": 30,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "SCH-PUBLIC",
+    "categoryId": "schools",
+    "name": "Public School",
+    "segment": "school",
+    "billing": "monthly",
+    "frequency": "1–3 pickups / week",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "SCH-PRIVATE",
+    "categoryId": "schools",
+    "name": "Private School",
+    "segment": "school",
+    "billing": "monthly",
+    "frequency": "2–5 pickups / week",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "BIZ-STANDARD",
+    "categoryId": "business",
+    "name": "Office Plan",
+    "segment": "business",
+    "billing": "monthly",
+    "frequency": "1–5 pickups / week",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "EVENT-FLEX",
+    "categoryId": "hospitality",
+    "name": "Event Flex",
+    "segment": "event",
+    "billing": "per_pickup",
+    "frequency": "On-demand",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "HOTEL-REGULAR",
+    "categoryId": "hospitality",
+    "name": "Hotel Regular",
+    "segment": "hotel",
+    "billing": "monthly",
+    "frequency": "Daily",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "VIP-BESPOKE",
+    "categoryId": "vip",
+    "name": "VIP Bespoke",
+    "segment": "vip",
+    "billing": "custom",
+    "status": "ACTIVE"
+  }
+]

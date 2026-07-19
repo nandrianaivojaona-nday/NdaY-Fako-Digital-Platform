@@ -1,0 +1,16 @@
+[
+    {
+      "id": "CUA-04-MAH-SEC01",
+      "fokontanyId": "CUA-04-MAH",
+      "code": "SEC01",
+      "name": "Sector 1",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "CUA-04-MAH-SEC02",
+      "fokontanyId": "CUA-04-MAH",
+      "code": "SEC02",
+      "name": "Sector 2",
+      "status": "ACTIVE"
+    }
+  ]

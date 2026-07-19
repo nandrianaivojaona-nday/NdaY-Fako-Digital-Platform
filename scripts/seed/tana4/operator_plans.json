@@ -1,0 +1,38 @@
+[
+    {
+      "id": "OPPLAN-OP001-HH-WEEKLY",
+  
+      "operatorId": "OP001",
+  
+      "planId": "PLAN-HH-WEEKLY",
+  
+      "price": 10000,
+      "currency": "MGA",
+  
+      "status": "ACTIVE"
+    },
+    {
+      "id": "OPPLAN-OP001-HH-TWICE",
+  
+      "operatorId": "OP001",
+  
+      "planId": "PLAN-HH-TWICE",
+  
+      "price": 15000,
+        "currency": "MGA",
+  
+      "status": "ACTIVE"
+    },
+    {
+      "id": "OPPLAN-OP001-BLD",
+  
+      "operatorId": "OP001",
+  
+      "planId": "PLAN-BLD-WEEKLY",
+  
+      "price": 40000,
+        "currency": "MGA",
+  
+      "status": "ACTIVE"
+    }
+  ]

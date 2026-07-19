@@ -1,0 +1,46 @@
+[
+  {
+    "id": "SUB001-SITE001-SEC01-MAH-04-CUA",
+
+    "siteId": "SITE001-SEC01-ARR04-CUA",
+
+    "operatorId": "OP001",
+
+    "planId": "PLAN-BASIC",
+
+    "status": "ACTIVE"
+  },
+  {
+    "id": "SUB002-SITE001-SEC01-ARR04-CUA",
+
+    "siteId": "SITE001-SEC01-ARR04-CUA",
+
+    "operatorId": "OP002",
+
+    "planId": "PLAN-PREMIUM",
+
+    "status": "ACTIVE"
+  },
+  {
+    "id": "SUB003-SITE002-SEC01-ARR04-CUA",
+
+    "siteId": "SITE002-SEC01-ARR04-CUA",
+
+    "operatorId": "OP001",
+
+    "planId": "PLAN-BASIC",
+
+    "status": "ACTIVE"
+  },
+  {
+    "id": "SUB004-SITE001-SEC01-FKT01-CRAL",
+
+    "siteId": "SITE001-SEC01-FKT01-CRAL",
+
+    "operatorId": "OP002",
+
+    "planId": "PLAN-PREMIUM",
+
+    "status": "ACTIVE"
+  }
+]

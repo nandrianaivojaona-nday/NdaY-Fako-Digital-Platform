@@ -1,0 +1,43 @@
+[
+    {
+      "id": "SITE001-SEC01-04-CUA",
+      "municipalityId": "CUA",
+      "arrondissementId": "ARR04-CUA",
+      "fokontanyId": "FKT01-04-CUA",
+      "sectorId": "SEC01-ARR04-CUA",
+  
+      "name": "Residence Mahamasina",
+      "type": "building",
+      "segment": "building",
+  
+      "caretakerId": "USR-CARE-001",
+  
+      "status": "ACTIVE"
+    },
+    {
+      "id": "SITE002-SEC01-ARR04-CUA",
+      "municipalityId": "CUA",
+      "arrondissementId": "ARR04-CUA",
+      "fokontanyId": "FKT01-ARR04-CUA",
+      "sectorId": "SEC02-ARR04-CUA",
+  
+      "name": "Lot II M 10",
+      "type": "house",
+      "segment": "household",
+  
+      "status": "ACTIVE"
+    },
+    {
+      "id": "SITE001-SEC01-FKT01-CRAL",
+      "municipalityId": "CRAL",
+      "arrondissementId": null,
+      "fokontanyId": "FKT01-CRAL",
+      "sectorId": "SEC01-FKT01-CRAL",
+  
+      "name": "Ecole Primaire Alasora Centre",
+      "type": "school",
+      "segment": "education",
+  
+      "status": "ACTIVE"
+    }
+  ]

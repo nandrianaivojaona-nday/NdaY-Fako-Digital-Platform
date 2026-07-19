@@ -1,0 +1,44 @@
+[
+    {
+      "id": "pickup_1",
+  
+      "siteId": "site_1",
+  
+      "subscriptionId": "sub_1",
+  
+      "operatorId": "operator_1",
+  
+      "collectorId": "collector_1",
+  
+      "vehicleId": "vehicle_1",
+  
+      "date": "2026-03-01",
+  
+      "status": "completed",
+  
+      "bagsCollected": 6,
+  
+      "notes": "Normal pickup"
+    },
+    {
+      "id": "pickup_2",
+  
+      "siteId": "site_1",
+  
+      "subscriptionId": "sub_1",
+  
+      "operatorId": "operator_1",
+  
+      "collectorId": "collector_1",
+  
+      "vehicleId": "vehicle_1",
+  
+      "date": "2026-03-03",
+  
+      "status": "completed",
+  
+      "bagsCollected": 7,
+  
+      "notes": "Extra bag"
+    }
+  ]

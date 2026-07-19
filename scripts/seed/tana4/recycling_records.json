@@ -1,0 +1,36 @@
+[
+    {
+      "id": "recycle_1",
+  
+      "siteId": "site_1",
+  
+      "pickupId": "pickup_1",
+  
+      "operatorId": "operator_1",
+  
+      "material": "plastic",
+  
+      "weightKg": 5,
+  
+      "credit": 1000,
+  
+      "date": "2026-03-01"
+    },
+    {
+      "id": "recycle_2",
+  
+      "siteId": "site_1",
+  
+      "pickupId": "pickup_2",
+  
+      "operatorId": "operator_1",
+  
+      "material": "cardboard",
+  
+      "weightKg": 8,
+  
+      "credit": 1500,
+  
+      "date": "2026-03-03"
+    }
+  ]

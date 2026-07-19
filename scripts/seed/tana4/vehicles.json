@@ -1,0 +1,9 @@
+[
+    {
+      "id": "VEH001-OP001",
+      "operatorId": "OP001",
+      "plate": "TANA-001",
+      "type": "truck",
+      "status": "ACTIVE"
+    }
+  ]

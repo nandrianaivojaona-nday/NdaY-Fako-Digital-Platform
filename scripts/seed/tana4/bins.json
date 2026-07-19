@@ -1,0 +1,15 @@
+[
+    {
+      "id": "BIN-CUA-04-MAH-SEC01-001",
+  
+      "siteId": "CUA-04-MAH-SEC01-SITE001",
+  
+      "operatorId": "OP001",
+  
+      "wasteType": "mixed",
+  
+      "qr": "NDY-BIN-001",
+  
+      "status": "ACTIVE"
+    }
+  ]

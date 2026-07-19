@@ -1,0 +1,46 @@
+[
+    {
+      "id": "CMP-ARR04-2026-CUA",
+  
+      "name": "MVP 4th Arrondissement",
+  
+      "municipalityId": "CUA",
+  
+      "arrondissementId": "ARR04",
+  
+      "clusters": [
+        "Mahamasina",
+        "Soanierana",
+        "Tsimbazaza",
+        "Ankadimbahoaka"
+      ],
+  
+      "targetAudits": 50,
+  
+      "targetEarlyAdopters": 15,
+  
+      "status": "active"
+    },
+  
+    {
+      "id": "CMP-CRAL-2026",
+  
+      "name": "Pilot Alasora",
+  
+      "municipalityId": "CRAL",
+  
+      "arrondissementId": null,
+  
+      "clusters": [
+        "Alasora",
+        "Sud Ambohipo",
+        "Ankadievo"
+      ],
+  
+      "targetAudits": 20,
+  
+      "targetEarlyAdopters": 5,
+  
+      "status": "active"
+    }
+  ]

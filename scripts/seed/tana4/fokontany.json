@@ -1,0 +1,39 @@
+[
+    {
+      "id": "CUA-04-MAH",
+      "municipalityId": "CUA",
+      "arrondissementId": "CUA-04",
+      "code": "MAH",
+      "name": "Mahamasina",
+      "status": "ACTIVE"
+    },
+
+    {
+      "id": "CUA-04-AKB",
+      "municipalityId": "CUA",
+      "arrondissementId": "CUA-04",
+      "code": "AKB",
+      "name": "Ankadimbahoaka",
+      "status": "ACTIVE"
+    },
+
+    {
+      "id": "FKT01-CRAL",
+      "name": "Alasora Centre",
+      "municipalityId": "CRAL",
+      "arrondissementId": null
+    },
+    {
+      "id": "FKT02-CRAL",
+      "name": "Alasora Sud Ambohipo",
+      "municipalityId": "CRAL",
+      "arrondissementId": null
+    },
+    {
+      "id": "FKT03-CRAL",
+      "name": "Alasora Ankadievo",
+      "municipalityId": "CRAL",
+      "arrondissementId": null
+    }
+
+  ]

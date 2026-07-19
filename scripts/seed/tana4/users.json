@@ -1,0 +1,19 @@
+[
+    {
+      "id": "USR-ADMIN-001",
+      "role": "SUPER_ADMIN",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "USR-CARE-001",
+      "role": "caretaker",
+      "fokontanyId": "CUA-04-MAH",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "USR-CIT-001",
+      "role": "citizen",
+      "siteId": "CUA-04-MAH-SEC02-SITE001",
+      "status": "ACTIVE"
+    }
+  ]

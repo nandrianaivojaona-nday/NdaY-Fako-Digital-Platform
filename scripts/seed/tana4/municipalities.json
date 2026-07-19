@@ -1,0 +1,14 @@
+[
+    {
+      "id": "CUA",
+      "name": "Commune Urbaine Antananarivo",
+      "sigle": "CUA",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "CRAL",
+      "name": "Commune Rurale Alasora",
+      "sigle": "CRAL",
+      "status": "ACTIVE"
+    }
+  ]

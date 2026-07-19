@@ -9,7 +9,7 @@ import {
 
 import { getDb } from "@/lib/firebase";
 
-import { StepProps } from "@/lib/audits/auditTypes";
+import { StepProps } from "@/lib/domain/audits/auditTypes";
 
 import dynamic from "next/dynamic";
 

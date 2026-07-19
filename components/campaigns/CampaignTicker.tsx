@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { CampaignHoverPreview } from "./CampaignHoverPreview";
-import { ExtendedCampaign } from "@/lib/types";
+import { ExtendedCampaign } from "@/types/types";
 import {
   CheckCircle,
   AlertCircle,

@@ -313,6 +313,7 @@
   width: max-content;
   animation: tickerScroll 25s linear infinite;
   padding: 8px 0;
+  z-index: 1;
 }
 
 /* PAUSE ON HOVER */
@@ -364,6 +365,7 @@
   transform: translateY(-2px) scale(1.02);
   border-color: rgba(187, 247, 208, 0.6);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 100;
 }
 
 /* Icon styling */
@@ -425,6 +427,21 @@
 .campaign-ticker-score.text-red-400 {
   background: rgba(239, 68, 68, 0.2);
   box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+}
+
+campaign-ticker-item:hover,
+.campaign-ticker-item:focus-within {
+  z-index: 200;
+}
+
+.campaign-hover-preview {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18rem;
+  z-index: 300;
+  pointer-events: none;
 }
 
 /* INFINITE SCROLL ANIMATION */

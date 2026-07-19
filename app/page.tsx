@@ -15,9 +15,9 @@ import CampaignCard from "@/components/campaigns/CampaignCard";
 
 // Hooks & Types
 import { useAuth } from "@/hooks/useAuth";
-// import { useAuth} from "@/components/auth/AuthProvider";
 import type { Operator } from "@/types/operator";
-import { ExtendedCampaign as Campaign } from "@/lib/types";
+import { ExtendedCampaign as Campaign } from "@/types/types";
+import { normalizeRole } from "@/hooks/normalizeRole"
 
 // Firebase Queries
 import {
@@ -25,7 +25,7 @@ import {
   getGlobalImpact,
   getOperatorImpact,
   getCampaigns,
-} from "@/lib/queries";
+} from "@/lib/api/queries";
 
 // Icons
 import {
@@ -71,40 +71,35 @@ export default function Page() {
   const { user: appUser, loading: authLoading } = useAuth();
   const router = useRouter();
 
-  // Redirect logged-in users to dashboard
-  useEffect(() => {
-    if (!authLoading && appUser) {
-      router.push('/');
-    }
-  }, [appUser, authLoading, router]);
 
   // ----------------------------------------
   // 3b. STATE DECLARATIONS
   // ----------------------------------------
-  
+
   // Campaign Data
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [selectedFokontany, setSelectedFokontany] = useState<string | null>(null);
-  
+
   // Impact & Metrics Data
   const [globalImpact, setGlobalImpact] = useState<GlobalImpact>({
     households: 0,
     kg: 0,
     som: 0,
   });
-  
+
   // Operators Data
   const [operators, setOperators] = useState<Operator[]>([]);
-  
+
   // Loading & Error States
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
 
   // ----------------------------------------
   // 3c. DATA FETCHING (Firestore)
   // ----------------------------------------
-  
+
   /**
    * Load all public data from Firestore
    * - Global impact metrics
@@ -115,25 +110,27 @@ export default function Page() {
     async function loadAllData() {
       // Don't fetch while auth is loading to avoid unnecessary calls
       if (authLoading) return;
-      
+
       setIsLoading(true);
       setError(null);
-      
+
       try {
         console.log("🔄 Loading public data from Firestore...");
-        
+
         const [gi, ops, cams] = await Promise.all([
           getGlobalImpact(),
           getPublicOperators(),
           getCampaigns()
         ]);
-        
+      
+
         setGlobalImpact(gi);
         setOperators(ops);
-        setCampaigns(cams as Campaign[]);
-        
+        setCampaigns(cams as any as Campaign[]);
+      
+
         console.log(`✅ Loaded: ${cams?.length || 0} campaigns, ${ops?.length || 0} operators`);
-        
+
       } catch (error) {
         console.error("❌ Failed to load public data:", error);
         setError("Failed to load data. Please refresh the page.");
@@ -141,14 +138,14 @@ export default function Page() {
         setIsLoading(false);
       }
     }
-    
+
     loadAllData();
   }, [authLoading]); // Re-run when auth state changes
 
   // ----------------------------------------
   // 3d. HELPER COMPONENTS
   // ----------------------------------------
-  
+
   /**
    * Operator Card Component
    * Fetches and displays individual operator impact metrics
@@ -157,7 +154,7 @@ export default function Page() {
     const { user: appUser, loading: authLoading } = useAuth(); // Access auth state
     const [impact, setImpact] = useState<any>(null);
     const [isLoadingImpact, setIsLoadingImpact] = useState(true);
-  
+
     useEffect(() => {
       async function loadImpact() {
         // Skip if auth is still loading
@@ -165,13 +162,13 @@ export default function Page() {
           setIsLoadingImpact(false);
           return;
         }
-  
+
         // Skip if no authenticated user (or if you want to restrict to specific roles)
         if (!appUser) {
           setIsLoadingImpact(false);
           return;
         }
-  
+
         try {
           const data = await getOperatorImpact(operator.id);
           setImpact(data);
@@ -181,10 +178,10 @@ export default function Page() {
           setIsLoadingImpact(false);
         }
       }
-  
+
       loadImpact();
     }, [operator.id, authLoading, appUser]);
-  
+
     if (isLoadingImpact) {
       return (
         <div className="card">
@@ -192,7 +189,7 @@ export default function Page() {
         </div>
       );
     }
-  
+
     return (
       <div className="card">
         <h3>{operator.name}</h3>
@@ -207,12 +204,12 @@ export default function Page() {
       </div>
     );
   }
-  
+
 
   // ----------------------------------------
   // 3e. HANDLER FUNCTIONS
   // ----------------------------------------
-  
+
   const handleCampaignSelect = (id: string) => {
     const found = campaigns.find((c) => c.id === id);
     setSelectedCampaign(found || null);
@@ -225,7 +222,7 @@ export default function Page() {
   // ----------------------------------------
   // 3f. LOADING & ERROR STATES
   // ----------------------------------------
-  
+
   if (isLoading) {
     return (
       <div className="app-root h-full">
@@ -246,8 +243,8 @@ export default function Page() {
           <div className="text-center bg-red-500/20 rounded-lg p-6 max-w-md">
             <div className="text-red-300 text-xl mb-2">⚠️ Error</div>
             <div className="text-white/70 mb-4">{error}</div>
-            <button 
-              onClick={() => window.location.reload()} 
+            <button
+              onClick={() => window.location.reload()}
               className="px-4 py-2 bg-emerald-600 rounded-lg text-white"
             >
               Retry
@@ -298,7 +295,7 @@ export default function Page() {
 
 
               {/* Main Header - Fixed below ticker */}
-              <div className="fixed top-[72px] left-0 w-full z-40 bg-black/20 backdrop-blur-md border-b border-white/10">
+              <div className="fixed top-18 left-0 w-full z-40 bg-black/20 backdrop-blur-md border-b border-white/10">
                 <header className="px-6 py-4">
                   <div className="flex items-center justify-between max-w-7xl mx-auto">
                     {/* LEFT — Brand */}
@@ -316,11 +313,71 @@ export default function Page() {
                       </p>
                     </div>
 
-                    {/* RIGHT — Join Button */}
+                    {/* RIGHT — Contextual User Area */}
                     <div className="shrink-0">
-                      <a href="/join" className="px-6 py-2 rounded-lg bg-teal-600 hover:bg-teal-700 transition-colors">
-                        Join
-                      </a>
+                      {authLoading ? (
+                        <div className="px-4 py-2 rounded-lg bg-white/10 text-white/50 text-sm">
+                          Connecting...
+                        </div>
+                      ) : appUser ? (
+                        <div className="flex items-center gap-3">
+
+                          {/* User Context */}
+                          <div className="hidden md:flex flex-col items-end text-white">
+                            <span className="text-xs opacity-60">
+                              Logged in as
+                            </span>
+
+                            <span className="font-semibold text-sm">
+                              {appUser.id || appUser.role || "User"}
+                            </span>
+
+                            {appUser.role && (
+                              <span className="text-[11px] uppercase tracking-wider text-emerald-300">
+                                {normalizeRole(appUser.role)}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Main Action */}
+                          <button
+                            onClick={() => {
+                              const role = normalizeRole(appUser.role);
+
+                              switch (role) {
+                                case "ADMIN":
+                                  router.push("/admin-app");
+                                  break;
+
+                                case "OPERATOR":
+                                  router.push("/operator-app");
+                                  break;
+
+                                case "COLLECTOR":
+                                  router.push("/collector-app");
+                                  break;
+
+                                case "CITIZEN":
+                                  router.push("/public");
+                                  break;
+
+                                default:
+                                  router.push("/dashboard");
+                              }
+                            }}
+                            className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 transition-colors text-white font-medium shadow-lg"
+                          >
+                            Resume Workspace
+                          </button>
+                        </div>
+                      ) : (
+                        <Link
+                          href="/join"
+                          className="px-6 py-2 rounded-lg bg-teal-600 hover:bg-teal-700 transition-colors text-white font-medium"
+                        >
+                          Join the Ecosystem
+                        </Link>
+                      )}
                     </div>
                   </div>
                 </header>
@@ -334,7 +391,7 @@ export default function Page() {
             {/* The Selected Campaign Overlay */}
             {selectedCampaign && (
               <div
-                className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md"
+                className="fixed inset-0 z-100 flex items-center justify-center p-6 bg-black/60 backdrop-blur-md"
                 onClick={() => setSelectedCampaign(null)}
               >
                 <div
@@ -350,9 +407,16 @@ export default function Page() {
 
                   <CampaignCard
                     campaign={selectedCampaign}
+
                     isExpanded={true}
                     onAssess={(campaign) => {
-                      router.push(`/assessment/${campaign.id}`);
+                      const returnUrl = `/assessment/${campaign.id}`;
+
+                      router.push(
+                        `/login?returnUrl=${encodeURIComponent(returnUrl)}&message=${encodeURIComponent(
+                          "Log in to start or update your assessment."
+                        )}`
+                      );
                     }}
                   />
                 </div>
@@ -361,8 +425,8 @@ export default function Page() {
             )}
 
 
-                {/* SCROLLABLE MAIN CONTENT - This is the ONLY thing that scrolls */}
-            <main className="flex-1 overflow-y-auto mt-[136px] mb-16">
+            {/* SCROLLABLE MAIN CONTENT - This is the ONLY thing that scrolls */}
+            <main className="flex-1 overflow-y-auto mt-34 mb-16">
               <div className="max-w-7xl mx-auto px-6">
 
                 {/* ========================= */}

@@ -12,8 +12,8 @@ import {
   Truck,
   BarChart3,
 } from "lucide-react";
-import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
-import { getDb } from "@/lib/firebase";
+import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import { getDb } from "@/lib/firebase/firebaseApp";
 import PageNavigation from "@/components/PageNavigation";
 
 type Operator = {
@@ -50,13 +50,6 @@ type Fokontany = {
   };
 };
 
-const [db, setDb] = useState<any>(null);
-
-useEffect(() => {
-  const firestore = getDb();
-  setDb(firestore);
-}, []);
-
 export default function OperatorHomePage() {
   const params = useParams<{ operatorId: string }>();
   const operatorId = params.operatorId;
@@ -74,6 +67,7 @@ export default function OperatorHomePage() {
         setLoading(true);
         setError(null);
 
+        const db = getDb(); // ✅ get instance here
         const operatorRef = doc(db, "operators", operatorId);
         const operatorSnap = await getDoc(operatorRef);
 
@@ -115,7 +109,8 @@ export default function OperatorHomePage() {
   }, [operatorId]);
 
   const stats = useMemo(() => {
-    const municipalityCount = new Set(fokontany.map((f) => f.municipalityId)).size;
+    const municipalityCount = new Set(fokontany.map((f) => f.municipalityId))
+      .size;
     const arrondissementCount = new Set(
       fokontany.map((f) => f.arrondissementId).filter(Boolean)
     ).size;

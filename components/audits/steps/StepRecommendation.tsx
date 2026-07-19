@@ -11,7 +11,7 @@ import {
 
 import { getDb } from "@/lib/firebase";
 
-import { StepProps } from "@/lib/audits/auditTypes";
+import { StepProps } from "@/lib/domain/audits/auditTypes";
 
 
 const [db, setDb] = useState<any>(null);

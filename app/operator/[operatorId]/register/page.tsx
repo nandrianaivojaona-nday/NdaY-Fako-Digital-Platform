@@ -2,11 +2,11 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { db } from "@/services/firebase"
+import { getDb } from "@/lib/firebase/firebaseApp"
 import { collection, addDoc } from "firebase/firestore"
 
 export default function RegisterOperator() {
-
+  const db = getDb
   const router = useRouter()
 
   const [name, setName] = useState("")
@@ -16,7 +16,7 @@ export default function RegisterOperator() {
 
   const registerOperator = async () => {
 
-    const docRef = await addDoc(collection(db, "operators"), {
+    const docRef = await addDoc(collection(db(), "operators"), {
       name,
       city,
       phone,

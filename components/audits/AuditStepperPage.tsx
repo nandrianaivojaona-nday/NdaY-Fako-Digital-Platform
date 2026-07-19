@@ -9,8 +9,8 @@ import StepEvaluation from "./steps/StepEvlauation";
 import StepRecommendation from "./steps/StepRecommendation";
 import StepConfirm from "./steps/StepConfirm";
 
-import { AuditForm } from "@/lib/audits/auditTypes";
-import { saveAudit } from "@/lib/audits/auditHelpers";
+import { AuditForm } from "@/lib/domain/audits/auditTypes";
+import { saveAudit } from "@/lib/domain/audits/auditHelpers";
 
 
 export default function AuditStepperPage() {

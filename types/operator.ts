@@ -24,17 +24,20 @@ export type OperatorType =
 
 
 
-// types/operator.ts
-export interface Operator {
-  id: string;
-  name: string;
-  email: string;
-  city: string;
-  type: 'formal' | 'informal' | 'cooperative';
-  status: 'active' | 'inactive' | 'pending';
-  createdAt: string;
-  updatedAt: string;
-}
+  export interface Operator {
+    id: string;
+    name: string;
+    city?: string;
+    type?: string;
+    status: "active" | "pending" | "inactive";
+    contact?: string;
+    capacity?: number;
+    collectors?: number;
+    zone?: string;
+    fokontany?: string;
+    createdAt?: string;
+    updatedAt?: string;
+  }
 
 export interface Collector {
   id: string;

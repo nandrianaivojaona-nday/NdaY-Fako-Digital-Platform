@@ -2,7 +2,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { ROLES } from "@/lib/roles";
+import { ROLES } from "@/lib/api/roles";
 
 
 // -----------------------------

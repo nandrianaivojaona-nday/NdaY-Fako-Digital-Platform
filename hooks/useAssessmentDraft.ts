@@ -1,85 +1,99 @@
 // hooks/useAssessmentDraft.ts
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { get, set } from "idb-keyval";
-import { AssessmentDraft } from "@/types/campaign";
+import { useState, useEffect, useCallback } from "react";
 import {
+  getAssessmentDraft,
+  saveAssessmentDraft,
   createDraft,
   markPendingSync,
   nextStep,
   prevStep,
+  AssessmentDraft,
 } from "@/lib/assessment-state";
 import { syncDraftToFirestore } from "@/lib/syncDraftToFirestore";
 
-const localStore = {
-  async get(key: string): Promise<AssessmentDraft | undefined> {
-    return (await get(key)) as AssessmentDraft | undefined;
-  },
-
-  async set(key: string, value: AssessmentDraft): Promise<void> {
-    await set(key, value);
-  },
-};
-
-export function useAssessmentDraft(campaignId: string, operatorId: string) {
-  const key = `assessment:${campaignId}:${operatorId}`;
+export function useAssessmentDraft(campaignId: string, userId: string) {
   const [draft, setDraft] = useState<AssessmentDraft | null>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
 
   useEffect(() => {
-    localStore.get(key).then((saved) => {
-      setDraft(saved ?? createDraft(campaignId, operatorId));
+    if (!campaignId || !userId) {
       setLoading(false);
-    });
-  }, [key, campaignId, operatorId]);
+      return;
+    }
 
-  const persist = useCallback(
-    async (updated: AssessmentDraft) => {
-      setDraft(updated);
-      await localStore.set(key, updated);
-    },
-    [key]
-  );
+    async function loadDraft() {
+      try {
+        let existing = await getAssessmentDraft(campaignId, userId);
+        if (!existing) {
+          existing = await createDraft(campaignId, userId);
+        }
+        setDraft(existing);
+      } catch (err) {
+        console.error("Failed to load draft:", err);
+        setSyncError("Failed to load draft");
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadDraft();
+  }, [campaignId, userId]);
 
   const save = useCallback(
-    async (partial: Partial<AssessmentDraft>) => {
-      if (!draft) return;
-      const updated = markPendingSync({ ...draft, ...partial });
-      await persist(updated);
+    async (data: Partial<AssessmentDraft>) => {
+      if (!campaignId || !userId) return;
+      try {
+        await saveAssessmentDraft({ campaignId, userId, ...data });
+        setDraft((prev) => (prev ? { ...prev, ...data } : null));
+      } catch (err) {
+        console.error("Save error:", err);
+        setSyncError("Save failed");
+      }
     },
-    [draft, persist]
+    [campaignId, userId]
   );
 
   const advance = useCallback(async () => {
-    if (!draft) return;
-    const step = nextStep(draft.currentStep) ?? draft.currentStep;
-    const updated = markPendingSync({ ...draft, currentStep: step });
-    await persist(updated);
-  }, [draft, persist]);
+    if (!campaignId || !userId) return;
+    try {
+      await nextStep(campaignId, userId);
+      const updated = await getAssessmentDraft(campaignId, userId);
+      setDraft(updated);
+    } catch (err) {
+      console.error("Advance error:", err);
+      setSyncError("Step advance failed");
+    }
+  }, [campaignId, userId]);
 
   const back = useCallback(async () => {
-    if (!draft) return;
-    const step = prevStep(draft.currentStep) ?? draft.currentStep;
-    const updated = markPendingSync({ ...draft, currentStep: step });
-    await persist(updated);
-  }, [draft, persist]);
+    if (!campaignId || !userId) return;
+    try {
+      await prevStep(campaignId, userId);
+      const updated = await getAssessmentDraft(campaignId, userId);
+      setDraft(updated);
+    } catch (err) {
+      console.error("Back error:", err);
+      setSyncError("Step back failed");
+    }
+  }, [campaignId, userId]);
 
   const syncNow = useCallback(async () => {
-    if (!draft) return;
+    if (!campaignId || !userId) return;
     setSyncing(true);
     setSyncError(null);
-
     try {
-      await syncDraftToFirestore(campaignId, operatorId, draft);
-    } catch (error: any) {
-      setSyncError(error?.message || "Failed to sync draft");
+      await syncDraftToFirestore(campaignId, userId);
+      const updated = await getAssessmentDraft(campaignId, userId);
+      setDraft(updated);
+    } catch (err: any) {
+      setSyncError(err.message || "Sync failed");
     } finally {
       setSyncing(false);
     }
-  }, [campaignId, operatorId, draft]);
+  }, [campaignId, userId]);
 
   return {
     draft,

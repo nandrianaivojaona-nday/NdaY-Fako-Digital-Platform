@@ -1,9 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { db } from "@/services/firebase"
+import { getDb } from "@/lib/firebase/firebaseApp"
 import { doc, getDoc } from "firebase/firestore"
-
+const db = getDb
 export default function ImpactCounter() {
 
   const [metrics, setMetrics] = useState<any>(null)
@@ -12,7 +12,7 @@ export default function ImpactCounter() {
 
     const loadMetrics = async () => {
 
-      const docRef = doc(db, "impact_metrics", "global")
+      const docRef = doc(db(), "impact_metrics", "global")
       const snapshot = await getDoc(docRef)
 
       if (snapshot.exists()) {

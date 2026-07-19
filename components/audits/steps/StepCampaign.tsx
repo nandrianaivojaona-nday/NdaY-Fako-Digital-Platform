@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { getDb } from "@/lib/firebase";
 
-import { StepProps } from "@/lib/audits/auditTypes";
+import { StepProps } from "@/lib/domain/audits/auditTypes";
 
 const [db, setDb] = useState<any>(null);
 

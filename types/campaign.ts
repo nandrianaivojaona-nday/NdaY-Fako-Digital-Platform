@@ -20,6 +20,7 @@ export type CampaignUrgency = "high" | "medium" | "low";
 export type Campaign = {
   id: string;
   name: string;
+  zone: string;
   fokontany: string;
   municipalityId?: string;
   status: CampaignStatus;
@@ -51,6 +52,24 @@ export type Campaign = {
   wasteCollectedKg?: number;
   targetWasteKg?: number;
   offline?: OfflineMeta;
+
+  pricingFramework?: {
+    mode: "FIXED" | "BOUNDED" | "GUIDED";
+    min: number;
+    recommended: number;
+    max: number;
+  };
+  financialRules?: {
+    commission: number;
+    methods: string[];
+  };
+  operatorRequirements?: {
+    collectors: number;
+    frequency: "daily" | "weekly" | "on-demand";
+  };
+  assignedOperatorId?: string;
+  assignedOperatorName?: string;
+  assignedAt?: string;
 };
 
 // ─── Offline Sync ───────────────────────────────────────────
@@ -217,9 +236,13 @@ export type OperatorDecision =
 export type AssessmentDraft = {
   id: string;
   campaignId: string;
+  userId: string;
   operatorId: string;
   currentStep: AssessmentStep;
   offline: OfflineMeta;
+  pendingSync: boolean;
+  updatedAt: any;
+  createdAt: any;
   subscribers?: SubscriberDraft[];
 
  
@@ -242,6 +265,11 @@ export type AssessmentDraft = {
 
   generatedDocumentJson?: CampaignAssessmentDocument;
   generatedAt?: string;
+
+  // Extra metadata for offline handling
+  dataVersion?: number; // Incremented on each save to detect conflicts
+  dataHash?: string;    // Hash of the data for integrity check
+  data?: any;         // Raw data snapshot for debugging
 };
 
 // ─── Final Document ───────────────────────────────────────────

@@ -1,6 +1,6 @@
 "use client";
 
-import { StepProps } from "@/lib/audits/auditTypes";
+import { StepProps } from "@/lib/domain/audits/auditTypes";
 
 export default function StepBuilding({
   form,

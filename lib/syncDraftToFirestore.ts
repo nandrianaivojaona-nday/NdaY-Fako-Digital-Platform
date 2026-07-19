@@ -1,38 +1,33 @@
 // lib/syncDraftToFirestore.ts
-import {
-    doc,
-    setDoc,
-    serverTimestamp,
-  } from "firebase/firestore";
-  import { getDb } from "@/lib/firebase";
-  import {useEffect, useState} from "react"
-  import { AssessmentDraft } from "@/types/campaign";
-  
+import { onSnapshot, doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { getDb } from "@/lib/firebase/firebaseApp";
 
-  const [db, setDb] = useState<any>(null);
+export function watchDraftSync(
+  campaignId: string,
+  userId: string,
+  callback: (status: { hasPendingWrites: boolean; fromCache: boolean }) => void
+): () => void {
+  const db = getDb();
+  const ref = doc(db, "assessmentDrafts", `${campaignId}_${userId}`);
+  const unsubscribe = onSnapshot(
+    ref,
+    { includeMetadataChanges: true },
+    (snap) => {
+      callback({
+        hasPendingWrites: snap.metadata.hasPendingWrites,
+        fromCache: snap.metadata.fromCache,
+      });
+    }
+  );
+  return unsubscribe;
+}
 
-useEffect(() => {
-  const firestore = getDb();
-  setDb(firestore);
-}, []);
+// ----- Exported function for useAssessmentDraft -----
 
-  export async function syncDraftToFirestore(
-    campaignId: string,
-    operatorId: string,
-    draft: AssessmentDraft
-  ) {
-    const ref = doc(db, "assessmentDrafts", `${campaignId}_${operatorId}`);
-  
-    await setDoc(
-      ref,
-      {
-        ...draft,
-        campaignId,
-        operatorId,
-        updatedAt: serverTimestamp(),
-        syncState: "PENDING_OR_SYNCED",
-      },
-      { merge: true }
-    );
-  }
-  
+export async function syncDraftToFirestore(campaignId: string, userId: string): Promise<void> {
+  const db = getDb();
+  const ref = doc(db, "assessmentDrafts", `${campaignId}_${userId}`);
+  await updateDoc(ref, {
+    _syncedAt: serverTimestamp(),
+  });
+}

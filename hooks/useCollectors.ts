@@ -1,68 +1,54 @@
-'use client';
-import { collection, addDoc, getDocs, query, where, doc, deleteDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { useAuth } from './useAuth';
-
-interface Collector {
-  id: string;
-  name: string;
-  district: string;
-  fokontany: string;
-  fokontanyName: string;
-  municipalityId: string;
-  operatorId: string;
-  productivity: string;
-  role: 'collector' | 'operator_admin';
-  status?: 'active' | 'inactive';
-}
-
-interface AddCollectorData {
-  name: string;
-  district: string;
-  fokontany: string;
-  fokontanyName: string;
-  productivity: string;
-  municipalityId: string;
-}
+import { collection, getDocs, addDoc, query, where } from "firebase/firestore";
+import { getDb } from "@/lib/firebase/firebaseApp";
+import type { Collector } from "@/types/collector";
+import { deleteDoc, doc, setDoc } from "firebase/firestore"
 
 export const useCollectors = () => {
-  const { appUser } = useAuth();
+  const db = getDb(); // ✅ important
 
-  const addCollector = async (inputData: AddCollectorData) => {
-    if (!appUser || appUser.role !== 'operator_admin') {
-      throw new Error('Unauthorized');
-    }
+  const getCollectors = async (operatorId: string): Promise<Collector[]> => {
+    const q = query(
+      collection(db, "collectors"),
+      where("operatorId", "==", operatorId)
+    );
 
-    // Generate ID: COL01-FKT01-DIS04-CUA
-    const colNum = Math.floor(Math.random() * 99) + 1;
-    const id = `COL${colNum.toString().padStart(2, '0')}-${inputData.fokontany}-${inputData.district}-${inputData.municipalityId}`;
+    const snapshot = await getDocs(q);
 
-    const collectorData = {
-      id,
-      role: 'collector' as const,
-      operatorId: appUser.operatorId!,
-      status: 'active' as const,
-      ...inputData
-    };
-
-    const ref = await addDoc(collection(db, 'collectors'), collectorData);
-    return ref.id;
+    return snapshot.docs.map((d) => ({
+      id: d.id,
+      ...(d.data() as Omit<Collector, "id">),
+    }));
   };
 
-  const getCollectors = async () => {
-    if (!appUser?.operatorId) return [];
-    const q = query(collection(db, 'collectors'), where('operatorId', '==', appUser.operatorId));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Collector));
+  const createCollector = async (
+    operatorId: string,
+    data: Partial<Collector>
+  ) => {
+    await addDoc(collection(db, "collectors"), {
+      ...data,
+      operatorId,
+    });
   };
 
   const deleteCollector = async (collectorId: string) => {
-    if (!appUser || appUser.role !== 'operator_admin') {
-      throw new Error('Unauthorized');
-    }
-    await deleteDoc(doc(db, 'collectors', collectorId));
+    const db = getDb();
+    await deleteDoc(doc(db, "collectors", collectorId));
   };
 
-  return { addCollector, getCollectors, deleteCollector };
+
+
+  return { getCollectors, createCollector, deleteCollector };
 };
-export type { Collector };
+export function useOperatorProfile() {
+  const db = getDb();
+
+  const saveProfile = async (operatorId: string, profile: any) => {
+    await setDoc(
+      doc(db, "operators", operatorId),
+      profile,
+      { merge: true }
+    );
+  };
+
+  return { saveProfile };
+}

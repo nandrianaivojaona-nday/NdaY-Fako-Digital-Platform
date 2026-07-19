@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Campaign} from "@/types/campaign";
-import { ExtendedCampaign } from "@/lib/types";
+import { ExtendedCampaign } from "@/types/types";
 import CampaignCard from "./CampaignCard";
 
 export default function CampaignFeed({ campaigns }: { campaigns: Campaign[] }) {

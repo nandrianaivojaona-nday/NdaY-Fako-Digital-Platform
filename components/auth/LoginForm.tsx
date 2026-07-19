@@ -1,84 +1,114 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "./AuthProvider";
+import { useAuth } from "@/hooks/useAuth";
 
 type LoginFormProps = {
   returnUrl?: string;
 };
 
 const LoginForm = ({ returnUrl = "/" }: LoginFormProps) => {
-  const { loginWithEmail, registerWithEmail, loginWithGoogle } = useAuth();
+  const { firebaseUser, user, loading: authLoading, loginWithEmail, registerWithEmail, loginWithGoogle } = useAuth();
   const router = useRouter();
+  const hasRedirected = useRef(false);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isRegister, setIsRegister] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
 
+  const safeReturnUrl =
+    !returnUrl || returnUrl.startsWith("/login") ? "/assessment" : returnUrl;
 
+  const redirectToTarget = (message?: string) => {
+    if (hasRedirected.current) return;
+    hasRedirected.current = true;
 
-  const redirectToTarget = (message: string) => {
-    const separator = returnUrl.includes("?") ? "&" : "?";
-    router.replace(`${returnUrl}${separator}auth=${encodeURIComponent(message)}`);
+    const target = message
+      ? `${safeReturnUrl}${safeReturnUrl.includes("?") ? "&" : "?"}auth=${encodeURIComponent(message)}`
+      : safeReturnUrl;
+
+    router.replace(target);
   };
 
+  useEffect(() => {
+    if (
+      !authLoading &&
+      firebaseUser
+    ) {
+      redirectToTarget();
+    }
+  }, [
+    authLoading,
+    firebaseUser,
+  ]);
+
   const handleSubmit = async () => {
-    setLoading(true);
+    if (submitting || hasRedirected.current) return;
+
+    setSubmitting(true);
     setErrorMessage("");
-    setSuccessMessage("");
-  
+
     try {
       if (isRegister) {
         await registerWithEmail(email, password);
-        setSuccessMessage("Account created successfully. Redirecting...");
         redirectToTarget("registered");
-      } else {
-        await loginWithEmail(email, password);
-        setSuccessMessage("Login successful. Redirecting...");
-        redirectToTarget("success");
+        return;
       }
+
+      await loginWithEmail(email, password);
+      redirectToTarget("success");
     } catch (error: any) {
+      hasRedirected.current = false;
       setErrorMessage(
-        error?.message || "Authentication failed. Please check your credentials and try again."
+        error?.message ||
+          "Authentication failed. Please check your credentials and try again."
       );
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
   const handleGoogleLogin = async () => {
-    setLoading(true);
+    if (submitting || hasRedirected.current) return;
+
+    setSubmitting(true);
     setErrorMessage("");
-    setSuccessMessage("");
-  
+
     try {
       await loginWithGoogle();
-      setSuccessMessage("Google login successful. Redirecting...");
       redirectToTarget("success");
     } catch (error: any) {
-      setErrorMessage(
-        error?.message || "Google login failed. Please try again."
-      );
+      hasRedirected.current = false;
+      setErrorMessage(error?.message || "Google login failed. Please try again.");
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70">
+        Checking your session...
+      </div>
+    );
+  }
+
+  if (firebaseUser) {
+    return (
+      <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+        You are already logged in. Redirecting...
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
       {errorMessage && (
         <div className="rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">
           {errorMessage}
-        </div>
-      )}
-
-      {successMessage && (
-        <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
-          {successMessage}
         </div>
       )}
 
@@ -111,16 +141,16 @@ const LoginForm = ({ returnUrl = "/" }: LoginFormProps) => {
       <button
         type="button"
         onClick={handleSubmit}
-        disabled={loading}
+        disabled={submitting}
         className="w-full rounded-xl bg-emerald-500 px-4 py-3 text-sm font-black uppercase tracking-wide text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {loading ? "Please wait..." : isRegister ? "Create account" : "Log in"}
+        {submitting ? "Please wait..." : isRegister ? "Create account" : "Log in"}
       </button>
 
       <button
         type="button"
         onClick={handleGoogleLogin}
-        disabled={loading}
+        disabled={submitting}
         className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-bold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
       >
         Continue with Google
@@ -129,7 +159,7 @@ const LoginForm = ({ returnUrl = "/" }: LoginFormProps) => {
       <button
         type="button"
         onClick={() => setIsRegister((prev) => !prev)}
-        className="w-full text-sm text-white/70 hover:text-white transition-colors"
+        className="w-full text-sm text-white/70 transition-colors hover:text-white"
       >
         {isRegister
           ? "Already have an account? Log in"

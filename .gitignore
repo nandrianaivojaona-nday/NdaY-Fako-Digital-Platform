@@ -46,5 +46,6 @@ Thumbs.db
 
 /dist/
 /seed/
+/scripts/serviceAccount*
 *.txt
 *.pdf

@@ -2,24 +2,20 @@
 
 import { useState, useEffect } from "react";
 import Logo from "@/components/Logo";
-import { WASTE_COLLECT_PLAN_CATEGORIES } from "@/scripts/seed//waste_collect_plans";
+import { WASTE_COLLECT_PLAN_CATEGORIES } from "@/scripts/seed/waste_collect_plans";
 import { collection, getDocs } from "firebase/firestore";
 import { getDb } from "@/lib/firebase/firebaseApp";
 
-// 1. Move the constant outside or define its type properly
+// Default operator (used if no operators exist in Firestore)
 const DEFAULT_OPERATOR = {
-  id: "NDYF01", // Unique ID for NdaY'Fako
+  id: "NDYF01",
   name: "NdaY'Fako Operator",
   city: "National Coverage",
-  description: "Official Platform Service Provider"
+  description: "Official Platform Service Provider",
 };
 
-
-
 export default function CitizenPage() {
-  const [categoryId, setCategoryId] = useState(WASTE_COLLECT_PLAN_CATEGORIES[0].id);
-
-  // 2. Initialize state with the default operator so operators[0] always exists
+  const [categoryId, setCategoryId] = useState(WASTE_COLLECT_PLAN_CATEGORIES[0]?.id || "");
   const [operators, setOperators] = useState<any[]>([DEFAULT_OPERATOR]);
   const [selectedOperatorId, setSelectedOperatorId] = useState(DEFAULT_OPERATOR.id);
   const [loading, setLoading] = useState(true);
@@ -27,49 +23,55 @@ export default function CitizenPage() {
   useEffect(() => {
     async function fetchOperators() {
       try {
-        const [db, setDb] = useState<any>(null);
-
-        useEffect(() => {
-          const firestore = getDb();
-          setDb(firestore);
-        }, []);
+        const db = getDb();
         const querySnapshot = await getDocs(collection(db, "operators"));
-        const fetchedOps = querySnapshot.docs.map(doc => ({
+        const fetchedOps = querySnapshot.docs.map((doc) => ({
           id: doc.id,
-          ...doc.data()
-
-
-
+          ...doc.data(),
         }));
 
+        // If we have Firestore operators, prepend the default one.
+        // Or you could replace entirely – adjust as needed.
         if (fetchedOps.length > 0) {
-          // If operators exist in Firestore, we can either replace the list 
-          // or prepend NdaY'Fako to the list.
           const finalOps = [DEFAULT_OPERATOR, ...fetchedOps];
           setOperators(finalOps);
-          setSelectedOperatorId(DEFAULT_OPERATOR.id); // Default to NdaY'Fako
+          setSelectedOperatorId(DEFAULT_OPERATOR.id);
+        } else {
+          // Fallback: only default operator
+          setOperators([DEFAULT_OPERATOR]);
+          setSelectedOperatorId(DEFAULT_OPERATOR.id);
         }
       } catch (error) {
         console.error("Error fetching operators:", error);
+        // Keep default operator on error
+        setOperators([DEFAULT_OPERATOR]);
+        setSelectedOperatorId(DEFAULT_OPERATOR.id);
       } finally {
         setLoading(false);
       }
     }
+
     fetchOperators();
   }, []);
 
   const category = WASTE_COLLECT_PLAN_CATEGORIES.find((c) => c.id === categoryId);
 
+  // If no categories, show a fallback
+  if (!WASTE_COLLECT_PLAN_CATEGORIES.length) {
+    return <div className="p-6 text-white">No subscription plans available.</div>;
+  }
+
   return (
     <div className="page-container">
       <header className="header">
-        <div className="header-logo"><Logo /></div>
+        <div className="header-logo">
+          <Logo />
+        </div>
         <h1>Waste Collection Subscription</h1>
       </header>
 
       <section className="section">
         <h2>Service Operator</h2>
-
         <div className="card">
           {loading ? (
             <p>Loading service providers...</p>
@@ -92,8 +94,9 @@ export default function CitizenPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm opacity-70">Current Operator:</p>
-                {/* Fixed the error by ensuring operators[0] is typed/defined */}
-                <p className="text-xl font-bold text-teal-300">{operators[0]?.name}</p>
+                <p className="text-xl font-bold text-teal-300">
+                  {operators[0]?.name || "NdaY'Fako Operator"}
+                </p>
               </div>
               <span className="text-xs bg-teal-500/20 text-teal-300 px-3 py-1 rounded-full border border-teal-500/30">
                 Primary Provider
@@ -103,7 +106,6 @@ export default function CitizenPage() {
         </div>
       </section>
 
-      {/* ... Rest of your component (Tabs and Plans) ... */}
       <section className="section">
         <h2>Choose your plan</h2>
         <div className="tabs">

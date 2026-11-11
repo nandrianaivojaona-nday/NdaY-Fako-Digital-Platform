@@ -157,15 +157,21 @@ export function useOperatorSetup({ campaignId, operatorId }: UseOperatorSetupOpt
       // Save to Firestore
       await setDoc(operatorRef, operatorData, { merge: true });
 
-      // Optionally update the campaign to link this operator
-      const campaignRef = doc(db, "campaigns", campaignId);
-      await updateDoc(campaignRef, {
-        [`operators.${operatorId}`]: {
-          name: state.identity.name,
-          status: "active",
-          joinedAt: serverTimestamp(),
-        },
+      // Phase 0 regression fix: campaigns writes are admin-only now, so
+      // operator self-registration goes through a server endpoint that
+      // enforces the correct authorization (admin OR that operator).
+      const { getAuth } = await import("firebase/auth");
+      const user = getAuth().currentUser;
+      if (!user) throw new Error("Not signed in");
+      const idToken = await user.getIdToken();
+      const reg = await fetch(`/api/campaigns/${campaignId}/operators/${operatorId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ name: state.identity.name }),
       });
+      if (!reg.ok) {
+        throw new Error(`operator registration failed: ${reg.status} ${await reg.text()}`);
+      }
 
       // Redirect to dashboard or success page
       router.push("/operator/dashboard");

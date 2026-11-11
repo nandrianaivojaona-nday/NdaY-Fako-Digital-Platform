@@ -144,6 +144,12 @@ export function useOperatorAssignment(campaignId: string) {
         assignedOperatorName: operator.name,
         status: "OPERATOR_ASSIGNED",
         assignedAt: serverTimestamp(),
+      // Phase 1: reference the exact locked config version this binding
+      // was created against. Falls back to the latest DRAFT if not yet locked.
+      configVersionId:
+        (campaign as any).currentConfigVersionId ??
+        (campaign as any).latestDraftConfigVersionId ??
+        null,
         updatedAt: serverTimestamp(),
       });
 

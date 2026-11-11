@@ -95,6 +95,19 @@ service cloud.firestore {
       allow write: if false;
     }
 
+
+    // ============================================
+    // PHASE 1 — CONFIG VERSIONING (server-write-only)
+    // ============================================
+    match /campaignConfigVersions/{versionId} {
+      allow read: if isAdminLike() || isOperator() || isAuthority();
+      allow write: if false;
+    }
+    match /campaignConfigApprovals/{approvalId} {
+      allow read: if isAdminLike();
+      allow write: if false;
+    }
+
     // ============================================
     // DEFAULT DENY
     // ============================================

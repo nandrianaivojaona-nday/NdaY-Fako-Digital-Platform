@@ -51,6 +51,9 @@ Thumbs.db
 *.pdf
 *.sh
 /docs/
+/NdaY_Y*/
+/txt/
+*.zip
 
 # Firebase service-account keys (any depth)
 **/serviceAccount*.json

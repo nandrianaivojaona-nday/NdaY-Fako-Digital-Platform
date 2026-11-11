@@ -49,3 +49,9 @@ Thumbs.db
 /scripts/serviceAccount*
 *.txt
 *.pdf
+*.sh
+/docs/
+
+# Firebase service-account keys (any depth)
+**/serviceAccount*.json
+.phase0-backup-*

@@ -1,0 +1,9 @@
+[
+    {
+      "id": "FKT-RANOMAFANA-01",
+      "regionId": "REG-VATOVAVY",
+      "communeId": "COM-RANOMAFANA",
+      "fokontanyIds": ["FKT-RAN01", "FKT-RAN02", "FKT-RAN03"],
+      "name": "Ranomafana Centre"
+    }
+  ]

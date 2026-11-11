@@ -34,6 +34,44 @@ interface Campaign {
   assignedOperatorId: string;
   createdAt: string;
 }
+interface SubscriptionMetrics {
+  active: number;
+  pending: number;
+  revenueMGA: number;
+}
+function SubscriptionMetricsPanel({ operatorId }: { operatorId: string }) {
+  const [metrics, setMetrics] = useState<SubscriptionMetrics | null>(null);
+
+  useEffect(() => {
+    fetch(`/api/app/operator/${operatorId}/subscription-metrics`, {
+      credentials: "include",
+    })
+      .then((r) => r.json())
+      .then(setMetrics);
+  }, [operatorId]);
+
+  if (!metrics) return <p className="text-white/60">Loading metrics…</p>;
+
+  return (
+    <div className="grid grid-cols-3 gap-4">
+      <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+        <p className="text-xs uppercase text-white/50">Active Subscriptions</p>
+        <p className="text-2xl font-bold text-emerald-300">{metrics.active}</p>
+      </div>
+      <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+        <p className="text-xs uppercase text-white/50">Pending Renewals</p>
+        <p className="text-2xl font-bold text-amber-300">{metrics.pending}</p>
+      </div>
+      <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+        <p className="text-xs uppercase text-white/50">Revenue (MGA)</p>
+        <p className="text-2xl font-bold text-cyan-300">
+          {metrics.revenueMGA.toLocaleString()}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 
 export default function OperatorDashboard() {
   const params = useParams();
@@ -140,6 +178,8 @@ export default function OperatorDashboard() {
           Manage Settings
         </button>
       </div>
+
+      <SubscriptionMetricsPanel operatorId={operatorId} />
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

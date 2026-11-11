@@ -6,14 +6,27 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isOperator() {
+      return isAuthenticated() && request.auth.token.get('role', '') == 'OPERATOR';
+    }
+
+    function belongsToOperator(operatorId) {
+      return isOperator() && request.auth.token.get('operatorId', '') == operatorId;
+    }
+
+    function isAuthority() {
+      return isAuthenticated() && request.auth.token.get('role', '') == 'AUTHORITY';
+    }
+
     function isAdmin() {
-      return isAuthenticated() &&
-             request.auth.token.admin == true;
+      return isAuthenticated() && (
+        request.auth.token.get('role', '') == 'ADMIN' || request.auth.token.get('admin', false) == true
+      );
     }
 
     function isSuperAdmin() {
       return isAuthenticated() &&
-             request.auth.token.super_admin == true;
+             request.auth.token.get('super_admin', false) == true;
     }
 
     function isAdminLike() {
@@ -26,12 +39,12 @@ service cloud.firestore {
 
     match /campaigns/{campaignId} {
       allow read: if true;
-      allow write: if isAuthenticated();
+      allow write: if isAdminLike();
     }
 
     match /operators/{operatorId} {
       allow read: if true;
-      allow write: if isAuthenticated();
+      allow write: if isAdminLike();
     }
 
     match /globalImpact/{document} {
@@ -41,7 +54,7 @@ service cloud.firestore {
 
     match /operator_zones/{zoneId} {
       allow read: if true;
-      allow write: if isAuthenticated();
+      allow write: if isAdminLike();
     }
 
     // ============================================
@@ -73,11 +86,13 @@ service cloud.firestore {
     // ============================================
 
     match /pickups/{pickupId} {
-      allow read, write: if isAuthenticated();
+      allow read: if isAdminLike();
+      allow write: if false;
     }
 
     match /pickup_requests/{requestId} {
-      allow read, write: if isAuthenticated();
+      allow read: if isAdminLike();
+      allow write: if false;
     }
 
     // ============================================
@@ -87,5 +102,54 @@ service cloud.firestore {
     match /{document=**} {
       allow read, write: if false;
     }
+
+    match /tveRuns/{runId} {
+  allow read: if isAdminLike()
+    || (isOperator() && resource.data.computedBy != null);
+  allow write: if false;
+}
+
+match /recalibrations/{recalibrationId} {
+  allow read: if isAdminLike()
+    || (isOperator() && belongsToOperator(resource.data.operatorId))
+    || (isAuthority());
+  allow write: if false;
+}
+
+match /hazardCache/{communeCode} {
+  allow read: if isAuthenticated();
+  allow write: if false;
+}
+
+match /stakes/{stakeId} {
+  allow read: if isAdminLike()
+    || (isOperator() && belongsToOperator(resource.data.operatorId));
+  allow create, update, delete: if false;
+
+  match /drafts/{type} {
+    allow read: if isAdminLike()
+      || (isOperator() && belongsToOperator(
+        get(/databases/$(database)/documents/stakes/$(stakeId)).data.operatorId
+      ));
+    allow write: if false;
+  }
+}
+
+match /businessModelScenarios/{scenarioId} {
+  allow read: if isAdminLike() || isAuthority() || isOperator();
+  allow write: if false;
+}
+
+match /oveValidations/{validationId} {
+  allow read: if isAdminLike() || isAuthority() || isOperator();
+  allow write: if false;
+}
+
+match /stakeIns/{stakeInId} {
+  allow read: if isAdminLike()
+    || (isOperator() && belongsToOperator(resource.data.operatorId));
+  allow write: if false;
+}
+
   }
 }

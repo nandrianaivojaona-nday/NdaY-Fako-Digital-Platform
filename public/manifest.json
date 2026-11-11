@@ -1,0 +1,14 @@
+{
+  "name": "NdaY'Fako — Citizen",
+  "short_name": "NdaY'Fako",
+  "start_url": "/citizen",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#06b6d4",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icons/citizen-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/citizen-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/citizen-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

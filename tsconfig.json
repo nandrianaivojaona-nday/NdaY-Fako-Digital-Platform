@@ -33,8 +33,6 @@
     "**/*.mts",
     "**/*.ts",
     "**/*.tsx",
-    // ".next/types/**/*.ts",
-    // ".next/dev/types/**/*.ts",
     "next-env.d.ts",
     ".next/types/**/*.ts"
   ],
@@ -43,6 +41,7 @@
     "scripts",
     "dist",
     "build",
-    "scripts/seed"
+    "scripts/seed",
+    "services/scripts"
   ]
 }

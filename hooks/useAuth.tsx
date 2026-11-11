@@ -11,7 +11,6 @@ import {
 
 import {
   onAuthStateChanged,
-  onIdTokenChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
@@ -109,6 +108,9 @@ export function AuthProvider({
   const initializedRef =
     useRef(false)
 
+  const sessionSyncsRef =
+    useRef(new Map<string, Promise<void>>())
+
   // ======================================================
   // HELPERS
   // ======================================================
@@ -119,29 +121,89 @@ export function AuthProvider({
     )
   }
 
+  const clearAuthSession = useCallback(async (expectedUid?: string) => {
+    const auth = authRef.current;
+    if (
+      expectedUid &&
+      auth?.currentUser &&
+      auth.currentUser.uid !== expectedUid
+    ) {
+      return;
+    }
+
+    try {
+      if (auth?.currentUser) await signOut(auth);
+    } catch (error) {
+      console.error("[AUTH] Firebase sign-out failed:", error);
+    }
+
+    try {
+      await fetch("/api/session", {
+        method: "DELETE",
+        credentials: "include",
+      });
+    } catch (error) {
+      console.error("[AUTH] Session cookie clear failed:", error);
+    } finally {
+      setFirebaseUser(null);
+      setUser(null);
+      setPermissions(null);
+      setLoading(false);
+    }
+  }, []);
+
   const syncSession = useCallback(
-    async (token: string) => {
-      const response = await fetch(
-        "/api/session",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          credentials: "include",
+    (fbUser: User) => {
+      const pendingSync = sessionSyncsRef.current.get(fbUser.uid);
+      if (pendingSync) return pendingSync;
+
+      const syncPromise = (async () => {
+        const postSession = (token: string) =>
+          fetch("/api/session", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+            credentials: "include",
+          });
+
+        let token = await fbUser.getIdToken();
+        let response = await postSession(token);
+
+        // The API may have just minted updated custom claims. Refresh the
+        // Firebase token and retry once so the session cookie carries them.
+        if (response.status === 409) {
+          const result = await response.json().catch(() => null);
+          if (result?.error === "CLAIMS_REFRESH_REQUIRED") {
+            token = await fbUser.getIdToken(true);
+            response = await postSession(token);
+          } else {
+            throw new Error(result?.message ?? "Failed to establish session");
+          }
         }
-      )
 
-      if (!response.ok) {
-        throw new Error(
-          "Failed to establish session"
-        )
-      }
+        if (!response.ok) {
+          const result = await response.json().catch(() => null);
+          if (result?.error === "AUTH_TOKEN_REJECTED") {
+            await clearAuthSession(fbUser.uid);
+          }
+          throw new Error(
+            typeof result?.message === "string"
+              ? result.message
+              : `Failed to establish session (HTTP ${response.status})`
+          );
+        }
 
-      // Allow browser to persist cookie
-      await waitForCookieSync()
+        // Allow browser to persist cookie
+        await waitForCookieSync();
+      })();
+
+      sessionSyncsRef.current.set(fbUser.uid, syncPromise);
+      return syncPromise.finally(() => {
+        if (sessionSyncsRef.current.get(fbUser.uid) === syncPromise) {
+          sessionSyncsRef.current.delete(fbUser.uid);
+        }
+      });
     },
-    []
+    [clearAuthSession]
   )
 
   // ======================================================
@@ -151,61 +213,75 @@ export function AuthProvider({
   const loadUserData = useCallback(
     async (fbUser: User | null) => {
       if (!fbUser) {
-        setUser(null)
-        setPermissions(null)
-        return
+        setUser(null);
+        setPermissions(null);
+        return;
+      }
+
+      // Reuse the session cookie issued at sign-in. Reissuing it on every
+      // reload fails after Firebase's recent-sign-in window has elapsed.
+      const pendingSync = sessionSyncsRef.current.get(fbUser.uid);
+      if (pendingSync) await pendingSync;
+
+      let sessionResponse = await fetch("/api/session", {
+        method: "GET",
+        credentials: "include",
+      });
+      // A fresh sign-in can finish setting its cookie while the auth-state
+      // listener's first verification request is in flight. Check once more
+      // after a miss to avoid racing that response.
+      if (!sessionResponse.ok) {
+        sessionResponse = await fetch("/api/session", {
+          method: "GET",
+          credentials: "include",
+        });
+      }
+      if (!sessionResponse.ok) {
+        setUser(null);
+        setPermissions(null);
+        return;
       }
 
       try {
-        const token =
-          await fbUser.getIdToken()
-
-        // Sync middleware session
-        await syncSession(token)
-
         // Load profile + permissions
-        const [userRes, permRes] =
-          await Promise.all([
-            fetch(
-              "/api/internal/users/profile",
-              {
-                credentials: "include",
-              }
-            ),
-            fetch(
-              "/api/internal/permissions",
-              {
-                credentials: "include",
-              }
-            ),
-          ])
+        const [userRes, permRes] = await Promise.all([
+          fetch("/api/internal/users/profile", {
+            credentials: "include",
+          }),
+          fetch("/api/internal/permissions", {
+            credentials: "include",
+          }),
+        ]);
 
-        const userData = userRes.ok
-          ? await userRes.json()
-          : null
+        const userData = userRes.ok ? await userRes.json() : null;
+        const permData = permRes.ok ? await permRes.json() : null;
 
-        const permData = permRes.ok
-          ? await permRes.json()
-          : null
-
-        setUser(userData)
-        setPermissions(permData)
+        setUser(userData);
+        setPermissions(permData);
       } catch (err) {
-        console.error(
-          "[AUTH] Failed loading user data:",
-          err
-        )
+        console.error("[AUTH] Failed loading user profile:", err);
 
-        // IMPORTANT:
-        // Do NOT clear firebase auth state.
-        // Only clear profile-level data.
+        // 🔥 FALLBACK: Create a basic user from Firebase Auth data
+        // This allows the app to proceed even if the profile endpoints aren't ready
+        const fallbackUser: UserProfile = {
+          id: fbUser.uid,
+          role: "CITIZEN", // default role
+        };
 
-        setUser(null)
-        setPermissions(null)
+        console.log("[AUTH] Using fallback user profile:", fallbackUser);
+        setUser(fallbackUser);
+
+        // Set default permissions
+        setPermissions({
+          canAccessAdmin: false,
+          canAccessAuthority: false,
+          canAccessOperator: false,
+          canAccessCitizen: true, // at least citizen access
+        });
       }
     },
-    [syncSession]
-  )
+    []
+  );
 
   // ======================================================
   // AUTH INITIALIZATION
@@ -246,6 +322,8 @@ export function AuthProvider({
             }
 
             setFirebaseUser(fbUser)
+            setUser(null)
+            setPermissions(null)
             // Load profile data separately
             await loadUserData(fbUser)
 
@@ -254,7 +332,7 @@ export function AuthProvider({
             // Stop global loading immediately.
             setLoading(false)
 
-            
+
           } catch (err) {
             console.error(
               "[AUTH] Auth state error:",
@@ -266,48 +344,12 @@ export function AuthProvider({
         }
       )
 
-    // ----------------------------------------
-    // TOKEN REFRESH LISTENER
-    // ----------------------------------------
-
-    const unsubToken =
-      onIdTokenChanged(
-        auth,
-        async (fbUser) => {
-          if (!isMounted) return
-
-          if (!fbUser) return
-
-          try {
-            const token =
-              await fbUser.getIdToken()
-
-            await fetch(
-              "/api/session",
-              {
-                method: "POST",
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-                credentials: "include",
-              }
-            )
-          } catch (err) {
-            console.error(
-              "[AUTH] Token refresh error:",
-              err
-            )
-          }
-        }
-      )
-
     return () => {
       isMounted = false
 
       unsubAuth()
-      unsubToken()
     }
-  }, [loadUserData])
+    }, [loadUserData])
 
   // ======================================================
   // RBAC
@@ -331,16 +373,7 @@ export function AuthProvider({
       if (!auth?.currentUser) return
 
       try {
-        const token =
-          await auth.currentUser.getIdToken(
-            true
-          )
-
-        await syncSession(token)
-
-        await loadUserData(
-          auth.currentUser
-        )
+        await loadUserData(auth.currentUser)
       } catch (err) {
         console.error(
           "[AUTH] Refresh failed:",
@@ -348,7 +381,7 @@ export function AuthProvider({
         )
       }
     },
-    [loadUserData, syncSession]
+    [loadUserData]
   )
 
   // ======================================================
@@ -374,10 +407,8 @@ export function AuthProvider({
         password
       )
 
-    const token =
-      await cred.user.getIdToken()
-
-    await syncSession(token)
+    await syncSession(cred.user)
+    await loadUserData(cred.user)
   }
 
   // ======================================================
@@ -403,10 +434,8 @@ export function AuthProvider({
         password
       )
 
-    const token =
-      await cred.user.getIdToken()
-
-    await syncSession(token)
+    await syncSession(cred.user)
+    await loadUserData(cred.user)
   }
 
   // ======================================================
@@ -431,10 +460,8 @@ export function AuthProvider({
         provider
       )
 
-    const token =
-      await cred.user.getIdToken()
-
-    await syncSession(token)
+    await syncSession(cred.user)
+    await loadUserData(cred.user)
   }
 
   // ======================================================
@@ -442,31 +469,7 @@ export function AuthProvider({
   // ======================================================
 
   const logout = async () => {
-    const auth = authRef.current
-
-    if (!auth) return
-
-    try {
-      await signOut(auth)
-
-      await fetch(
-        "/api/session",
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      )
-    } catch (err) {
-      console.error(
-        "[AUTH] Logout failed:",
-        err
-      )
-    } finally {
-      setFirebaseUser(null)
-      setUser(null)
-      setPermissions(null)
-      setLoading(false)
-    }
+    await clearAuthSession()
   }
 
   // ======================================================

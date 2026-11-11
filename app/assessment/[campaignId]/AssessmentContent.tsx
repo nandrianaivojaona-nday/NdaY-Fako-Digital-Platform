@@ -1,7 +1,7 @@
 "use client";
 
 // ============================================
-// 1. IMPORTS (combined from both files)
+// 1. IMPORTS
 // ============================================
 
 import { useEffect, useMemo, useState } from "react";
@@ -16,7 +16,7 @@ import {
 import { getDb } from "@/lib/firebase/firebaseApp";
 import { useAuth } from "@/hooks/useAuth";
 import { useAssessmentDraft } from "@/hooks/useAssessmentDraft";
-import { watchDraftSync } from "@/lib/api/sync/watchDraftSync";
+import { useWatchDraftSync } from "@/lib/api/sync/useWatchDraftSync"; // 👈 new custom Hook
 import {
   scoreMarketDemand,
   scoreOperability,
@@ -32,9 +32,10 @@ import {
   RiskInputs,
   Campaign,
   OperatorDecision,
+  computeStakeTveSignal,
 } from "@/types/campaign";
 
-// Step components (ensure these exist at the relative path)
+// Step components
 import BriefStep from "./_steps/BriefStep";
 import MarketDemandStep from "./_steps/MarketDemandStep";
 import OperabilityStep from "./_steps/OperabilityStep";
@@ -77,25 +78,22 @@ export default function AssessmentContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const { user, loading: authLoading } = useAuth();
-  const userId = user?.id;
+  const { firebaseUser, loading: authLoading } = useAuth();
+  const userId = firebaseUser?.uid;
 
   const stakeIntent = searchParams.get("stake") === "true";
   const requestedStep = searchParams.get("step");
   const db = getDb();
 
-  // ─── State for campaign (shared between public & operator) ───
+  // ─── State for campaign ───
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [campaignLoading, setCampaignLoading] = useState(true);
   const [campaignError, setCampaignError] = useState<string | null>(null);
   const [campaignSource, setCampaignSource] = useState<
     "cache" | "server" | "unknown"
   >("unknown");
-  const [syncStatus, setSyncStatus] = useState<
-    "idle" | "cached" | "pending" | "synced"
-  >("idle");
 
-  // ─── Load campaign data (used by both views) ───
+  // ─── Load campaign data ───
   useEffect(() => {
     if (authLoading) return;
     if (!campaignId) {
@@ -126,6 +124,7 @@ export default function AssessmentContent() {
         setCampaignSource(snap.metadata.fromCache ? "cache" : "server");
         setCampaignError(null);
         setCampaignLoading(false);
+
       },
       (error) => {
         console.error("Campaign listener error:", error);
@@ -155,28 +154,14 @@ export default function AssessmentContent() {
     canLoadDraft ? userId! : ""
   );
 
-  // ─── Operator‑only: Draft sync watcher ───
-  useEffect(() => {
-    if (authLoading) return;
-    if (!campaignId || !userId) {
-      setSyncStatus("idle");
-      return;
-    }
+  // ─── 🔥 FIX: use the custom Hook for sync status ───
+  // This is now called at the top level, not inside a useEffect callback.
+  const syncStatus = useWatchDraftSync(
+    campaignId || "",
+    userId || ""
+  );
 
-    try {
-      const unsubscribe = watchDraftSync(campaignId, userId, (status) => {
-        if (status.hasPendingWrites) setSyncStatus("pending");
-        else if (!status.fromCache) setSyncStatus("synced");
-        else setSyncStatus("cached");
-      });
-      return () => unsubscribe();
-    } catch (error) {
-      console.error("Sync watcher error:", error);
-      setSyncStatus("idle");
-    }
-  }, [authLoading, campaignId, userId]);
-
-  // ─── Operator‑only: online sync ───
+  // ─── Operator‑only: online sync (no changes) ───
   useEffect(() => {
     if (!campaignId || !userId) return;
     const handleOnline = () => void syncNow();
@@ -188,6 +173,7 @@ export default function AssessmentContent() {
   const isLoading =
     authLoading || campaignLoading || (canLoadDraft ? draftLoading : false);
 
+
   // ─── If campaign failed to load ───
   if (campaignError) {
     return <div className="p-6 text-red-400">Error: {campaignError}</div>;
@@ -197,20 +183,84 @@ export default function AssessmentContent() {
     return <div className="p-6">Loading assessment...</div>;
   }
 
-  // ─── 🟢 RENDER PUBLIC TEASER IF NOT AUTHENTICATED ───
-  if (!user) {
+  const projectedTve = computeStakeTveSignal({
+    demand: campaign?.bankability?.scores?.environmental ?? 0,
+    operability: campaign?.bankability?.scores?.operational ?? 0,
+    bankability: campaign?.bankability?.scores?.financial ?? 0,
+    risk:
+      typeof campaign?.bankability?.scores?.overall === "number"
+        ? Math.max(0, 100 - campaign.bankability.scores.overall)
+        : 50,
+    territoryName: campaign?.fokontany ?? campaign?.name ?? "This territory",
+  });
+
+  const tveBadgeTone =
+    projectedTve.decision === "PRIORITIZE"
+      ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+      : projectedTve.decision === "VALIDATE"
+      ? "bg-sky-500/20 text-sky-300 border-sky-500/30"
+      : projectedTve.decision === "CAUTION"
+      ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
+      : "bg-red-500/20 text-red-300 border-red-500/30";
+
+  // ─── 🟢 RENDER PUBLIC TEASER ───
+  if (!firebaseUser) {
     return (
-      <div className="space-y-6 p-6 max-w-3xl mx-auto">
+      <div className="space-y-6 p-6 max-w-4xl mx-auto">
         <div>
-          <h1 className="text-3xl font-bold">{campaign.name}</h1>
-          <p className="text-sm opacity-70">{campaign.fokontany}</p>
+          <h1 className="text-3xl font-bold text-white">{campaign.name}</h1>
+          <p className="text-sm text-white/60">{campaign.fokontany}</p>
         </div>
 
-        <div className="rounded-xl border border-white/10 p-6 bg-white/5">
-          <p className="text-white/80">
-            This campaign is open for operator assessment. Log in or create an
-            account to stake your interest and begin the evaluation process.
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-widest ${tveBadgeTone}`}>
+              Projected TVE · {projectedTve.decision}
+            </div>
+            <div className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white">
+              {projectedTve.score}% readiness
+            </div>
+            <div className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white">
+              {projectedTve.band}
+            </div>
+          </div>
+
+          <p className="mt-4 text-white/80">
+            Stake-in now begins with a projected territorial value review. Log in or create an
+            account to validate the demand, operability, bankability, and risk assumptions behind this territory.
           </p>
+
+          <p className="mt-3 text-sm text-white/60">{projectedTve.summary}</p>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/50">
+                Value drivers
+              </p>
+              <ul className="mt-2 space-y-1 text-sm text-white/80">
+                {(projectedTve.keyDrivers.length
+                  ? projectedTve.keyDrivers
+                  : ["No strong drivers yet"]
+                ).map((item) => (
+                  <li key={item}>• {item}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/50">
+                Validation priorities
+              </p>
+              <ul className="mt-2 space-y-1 text-sm text-white/80">
+                {(projectedTve.blockers.length
+                  ? projectedTve.blockers
+                  : ["No major blockers currently flagged"]
+                ).map((item) => (
+                  <li key={item}>• {item}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
 
         <button
@@ -220,21 +270,20 @@ export default function AssessmentContent() {
             }`;
             router.push(
               `/login?returnUrl=${encodeURIComponent(returnUrl)}&message=${encodeURIComponent(
-                "Log in to start or update your assessment."
+                "Log in to review projected TVE and complete your stake-in assessment."
               )}`
             );
           }}
           className="rounded-lg bg-emerald-600 px-6 py-3 text-white font-semibold hover:bg-emerald-700 transition"
         >
-          Stake In & Assess
+          Review TVE & Stake In
         </button>
       </div>
     );
   }
 
-  // ─── 🟢 RENDER FULL OPERATOR ASSESSMENT (authenticated) ───
+  // ─── 🟢 RENDER FULL OPERATOR ASSESSMENT ───
 
-  // If draft isn't loaded yet (but we have user), wait
   if (draftLoading) {
     return <div className="p-6">Loading your assessment draft...</div>;
   }
@@ -243,7 +292,6 @@ export default function AssessmentContent() {
     return <div className="p-6">Unable to load assessment draft.</div>;
   }
 
-  // 🔥 FIX: cast to AssessmentStep
   const currentStep = (draft?.currentStep ?? "BRIEF") as AssessmentStep;
   const stepIndex = Math.max(0, STEP_ORDER.indexOf(currentStep));
   const progressPct = Math.round(((stepIndex + 1) / STEP_ORDER.length) * 100);
@@ -261,7 +309,7 @@ export default function AssessmentContent() {
     return descriptions[step] || "Complete assessment details";
   };
 
-  // ─── Handler functions ───
+  // ─── Handlers ───
   async function handleMarketDemand(inputs: MarketDemandInputs) {
     const output = scoreMarketDemand(inputs);
     await save({ marketDemandInputs: inputs, marketDemandOutput: output });
@@ -381,6 +429,54 @@ export default function AssessmentContent() {
             {campaignSource}
           </span>
         </div>
+
+        {stakeIntent && (
+          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="rounded-full bg-amber-500/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-amber-300">
+                Stake-In TVE
+              </div>
+              <div className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-widest ${tveBadgeTone}`}>
+                {projectedTve.decision}
+              </div>
+              <div className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white">
+                {projectedTve.score}% readiness
+              </div>
+            </div>
+
+            <p className="mt-3 text-sm text-white/80">{projectedTve.summary}</p>
+
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
+              <div className="rounded-xl border border-white/10 bg-black/20 p-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/50">
+                  Supporting signals
+                </p>
+                <ul className="mt-2 space-y-1 text-sm text-white/80">
+                  {(projectedTve.keyDrivers.length
+                    ? projectedTve.keyDrivers
+                    : ["No strong drivers yet"]
+                  ).map((item) => (
+                    <li key={item}>• {item}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-black/20 p-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/50">
+                  Assumptions to validate
+                </p>
+                <ul className="mt-2 space-y-1 text-sm text-white/80">
+                  {(projectedTve.blockers.length
+                    ? projectedTve.blockers
+                    : ["No major blockers currently flagged"]
+                  ).map((item) => (
+                    <li key={item}>• {item}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
 
         {syncError && (
           <div className="flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-3 backdrop-blur-sm">

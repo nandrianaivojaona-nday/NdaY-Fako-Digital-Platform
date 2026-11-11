@@ -1,0 +1,55 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getAuth } from "firebase-admin/auth";
+import { getAdminApp } from "@/lib/firebase/firebaseAdmin";
+import { createOfferFromScenario, listOffersForOperator } from "@/services/offerService";
+import type { OperatorRole } from "@/lib/domain/subscription/operatorRoles";
+
+async function authenticate(req: NextRequest) {
+  const token = (req.headers.get("authorization") ?? "").replace("Bearer ", "");
+  if (!token) throw new Error("Unauthorized");
+  const decoded = await getAuth(getAdminApp()).verifyIdToken(token);
+  return {
+    uid: decoded.uid,
+    role: ((decoded as any).operatorRole ?? "COLLECTOR") as OperatorRole,
+    operatorId: (decoded as any).operatorId as string | undefined,
+  };
+}
+
+export async function GET(
+  req: NextRequest,
+  context: { params: Promise<{ operatorId: string }> }
+) {
+  try {
+    const actor = await authenticate(req);
+    const { operatorId } = await context.params;
+    if (actor.operatorId !== operatorId && actor.role !== "CEO") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    const offers = await listOffersForOperator(operatorId);
+    return NextResponse.json(offers);
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 401 });
+  }
+}
+
+export async function POST(req: NextRequest, context: { params: Promise<{ operatorId: string }> }) {
+  try {
+    const actor = await authenticate(req);
+    const { operatorId } = await context.params;
+    if (actor.operatorId !== operatorId && actor.role !== "CEO") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    const body = await req.json();
+    const { offer, version } = await createOfferFromScenario({
+      scenarioId: body.scenarioId,
+      planTypeId: body.planTypeId,
+      operatorId: operatorId,
+      actorUserId: actor.uid,
+      actorRole: actor.role,
+      initialCommercial: body.initialCommercial,
+    });
+    return NextResponse.json({ offer, version });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 400 });
+  }
+}

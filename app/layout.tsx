@@ -4,9 +4,16 @@ import './globals.css';
 import { AuthProvider } from '@/hooks/useAuth';
 
 
-export const metadata: Metadata = {
-  title: 'NdaY-Fako - Waste Management Platform',
-  description: 'Waste collection and recycling management for CUA',
+export const metadata = {
+  title: "NdaY'Fako",
+  description: "Your household waste collection service",
+  manifest: "/manifest.json",
+  themeColor: "#06b6d4",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "NdaY'Fako",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -11,7 +11,7 @@ import {
   ShieldCheck,
   ChevronRight,
 } from "lucide-react";
-import { Campaign as BaseCampaign } from "@/types/campaign";
+import { Campaign as BaseCampaign, computeStakeTveSignal } from "@/types/campaign";
 import { ExtendedCampaign } from "@/types/types";
 
 const CampaignMap = dynamic(() => import("@/components/map/CampaignMap"), {
@@ -50,6 +50,22 @@ export default function CampaignCard({
   const estimatedROI = bank?.investmentProfile?.estimatedROI ?? 0;
   const financialScore = bank?.scores?.financial ?? 0;
   const hasBankability = !!bank?.investmentProfile && !!bank?.scores;
+  const tveSignal = computeStakeTveSignal({
+    demand: bank?.scores?.environmental ?? 0,
+    operability: bank?.scores?.operational ?? 0,
+    bankability: bank?.scores?.financial ?? 0,
+    risk: typeof overallScore === "number" ? Math.max(0, 100 - overallScore) : 50,
+    territoryName: campaign.fokontany || campaign.name || "This territory",
+  });
+
+  const tveTone =
+    tveSignal.decision === "PRIORITIZE"
+      ? "text-emerald-300 border-emerald-500/20 bg-emerald-500/10"
+      : tveSignal.decision === "VALIDATE"
+      ? "text-sky-300 border-sky-500/20 bg-sky-500/10"
+      : tveSignal.decision === "CAUTION"
+      ? "text-amber-300 border-amber-500/20 bg-amber-500/10"
+      : "text-red-300 border-red-500/20 bg-red-500/10";
 
   const router = useRouter();
 
@@ -163,6 +179,53 @@ export default function CampaignCard({
         />
       </div>
 
+      <div className={`mb-6 rounded-2xl border p-4 ${tveTone}`}>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em]">
+              Projected TVE at Stake-In
+            </p>
+            <h4 className="mt-2 text-lg font-bold text-white">
+              {tveSignal.decision} · {tveSignal.score}% readiness
+            </h4>
+            <p className="mt-2 text-sm text-white/75">{tveSignal.summary}</p>
+          </div>
+          <div className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white">
+            {tveSignal.band}
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          <div className="rounded-xl border border-white/10 bg-black/20 p-3">
+            <p className="text-[10px] font-black uppercase tracking-widest text-white/50">
+              Key drivers
+            </p>
+            <ul className="mt-2 space-y-1 text-sm text-white/80">
+              {(tveSignal.keyDrivers.length
+                ? tveSignal.keyDrivers
+                : ["No strong drivers yet"]
+              ).map((item) => (
+                <li key={item}>• {item}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="rounded-xl border border-white/10 bg-black/20 p-3">
+            <p className="text-[10px] font-black uppercase tracking-widest text-white/50">
+              Watchouts
+            </p>
+            <ul className="mt-2 space-y-1 text-sm text-white/80">
+              {(tveSignal.blockers.length
+                ? tveSignal.blockers
+                : ["No major blockers currently flagged"]
+              ).map((item) => (
+                <li key={item}>• {item}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+
       {showIntentionalMap && (
         <div className="mb-6 animate-in fade-in slide-in-from-top-4 duration-500">
           <div className="h-64 w-full overflow-hidden rounded-2xl border border-white/10">
@@ -182,7 +245,7 @@ export default function CampaignCard({
           className="button inline-flex items-center justify-center gap-2 py-3 text-[10px] font-black uppercase hover:bg-emerald-600 transition-colors rounded-xl bg-emerald-500 text-white"
         >
           <ChevronRight size={14} />
-          Stake Territory
+          Stake with TVE Review
         </button>
 
         {onAssess ? (

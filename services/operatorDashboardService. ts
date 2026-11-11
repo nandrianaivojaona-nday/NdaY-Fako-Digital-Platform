@@ -1,0 +1,148 @@
+// services/operatorDashboardService.ts
+import { getFirestore } from "firebase-admin/firestore";
+import { getAdminApp } from "@/lib/firebase/firebaseAdmin";
+import { collections } from "@/lib/firebase/collections";
+
+export interface OperatorDashboardData {
+  operator: {
+    id: string;
+    name: string;
+    communeName: string;
+  };
+  kpis: {
+    activeSubscriptions: number;
+    todayRoutes: number;
+    revenueTodayMGA: number;
+    pendingApprovals: number;
+  };
+  todayRoutes: Array<{
+    time: string;
+    zoneName: string;
+    progressPercent: number;
+    status: "COMPLETE" | "IN_PROGRESS" | "NOT_STARTED";
+  }>;
+  alerts: Array<{
+    severity: "warning" | "critical" | "info";
+    message: string;
+    href?: string;
+  }>;
+  territory: Array<{
+    fokontanyId: string;
+    name: string;
+    activeSubs: number;
+    coveragePercent: number;
+  }>;
+  subscriptionMix: {
+    premium: number;
+    exchange: number;
+    b2b: number;
+    b2g: number;
+  };
+  financial: {
+    revenueTodayMGA: number;
+    royaltyOwedMGA: number;
+    materialsSoldMGA: number;
+    netMGA: number;
+  };
+  governance: {
+    activeOffers: number;
+    drafts: number;
+    pendingCeo: number;
+    retired: number;
+  };
+}
+
+export async function getOperatorDashboardData(
+  operatorId: string
+): Promise<OperatorDashboardData> {
+  const db = getFirestore(getAdminApp());
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayMs = today.getTime();
+
+  // -------- Operator --------
+  const operatorDoc = await db.collection("operators").doc(operatorId).get();
+  const operatorData = operatorDoc.data() ?? {};
+
+  // -------- Subscriptions --------
+  const subsSnap = await db
+    .collection(collections.subscriptions)
+    .where("operatorId", "==", operatorId)
+    .where("status", "==", "ACTIVE")
+    .get();
+
+  let premium = 0, exchange = 0, b2b = 0, b2g = 0;
+  subsSnap.forEach((d) => {
+    const s = d.data();
+    if (s.planTypeId === "HH_PREMIUM") premium++;
+    if (s.planTypeId === "HH_EXCHANGE") exchange++;
+    if (s.planTypeId === "B2B_COMMERCIAL") b2b++;
+    if (s.planTypeId === "B2G_INSTITUTIONAL") b2g++;
+  });
+
+  // -------- Payments today --------
+  const paymentsSnap = await db
+    .collection(collections.payments)
+    .where("operatorId", "==", operatorId)
+    .where("status", "==", "COMPLETED")
+    .where("createdAt", ">=", todayMs)
+    .get();
+
+  let revenueTodayMGA = 0;
+  paymentsSnap.forEach((d) => {
+    revenueTodayMGA += d.data().amountMGA ?? 0;
+  });
+
+  // -------- Offers --------
+  const offersSnap = await db
+    .collection(collections.subscriptionOffers)
+    .where("operatorId", "==", operatorId)
+    .get();
+
+  let activeOffers = 0, drafts = 0, pendingCeo = 0, retired = 0;
+  offersSnap.forEach((d) => {
+    const s = d.data().status;
+    if (s === "ACTIVE") activeOffers++;
+    else if (s === "DRAFT") drafts++;
+    else if (s === "SUBMITTED") pendingCeo++;
+    else if (s === "RETIRED") retired++;
+  });
+
+  // -------- Territory (simplified) --------
+  const territory: OperatorDashboardData["territory"] = [];
+
+  // -------- Alerts (simplified) --------
+  const alerts: OperatorDashboardData["alerts"] = [];
+  if (pendingCeo > 0) {
+    alerts.push({
+      severity: "info",
+      message: `${pendingCeo} offer(s) awaiting CEO approval`,
+      href: `/operator/${operatorId}/offers`,
+    });
+  }
+
+  return {
+    operator: {
+      id: operatorId,
+      name: operatorData.name ?? "Operator",
+      communeName: operatorData.communeName ?? "",
+    },
+    kpis: {
+      activeSubscriptions: subsSnap.size,
+      todayRoutes: 0,
+      revenueTodayMGA,
+      pendingApprovals: pendingCeo,
+    },
+    todayRoutes: [],
+    alerts,
+    territory,
+    subscriptionMix: { premium, exchange, b2b, b2g },
+    financial: {
+      revenueTodayMGA,
+      royaltyOwedMGA: Math.round(revenueTodayMGA * 0.15),
+      materialsSoldMGA: 0,
+      netMGA: revenueTodayMGA,
+    },
+    governance: { activeOffers, drafts, pendingCeo, retired },
+  };
+}

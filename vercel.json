@@ -1,0 +1,8 @@
+{
+    "crons": [
+      { "path": "/api/cron/auto-accept-sweep", "schedule": "0 * * * *" },
+      { "path": "/api/cron/settlement-payouts", "schedule": "0 3 1 * *" },
+      { "path": "/api/cron/recompute-counters", "schedule": "0 */6 * * *" }
+    ]
+  }
+  

@@ -194,6 +194,15 @@ export type ReadinessScores = {
   band: AssessmentBand;
 };
 
+export type StakeTveSignal = {
+  score: number;
+  band: AssessmentBand;
+  decision: "PRIORITIZE" | "VALIDATE" | "CAUTION" | "DEFER";
+  summary: string;
+  keyDrivers: string[];
+  blockers: string[];
+};
+
 export function computeReadiness(
   demand: number,
   operability: number,
@@ -213,6 +222,64 @@ export function computeReadiness(
     riskAdjusted,
     overall: Math.round(overall),
     band: scoreToBand(overall),
+  };
+}
+
+export function computeStakeTveSignal(args: {
+  demand?: number;
+  operability?: number;
+  bankability?: number;
+  risk?: number;
+  territoryName?: string;
+}): StakeTveSignal {
+  const demand = Number(args.demand ?? 0);
+  const operability = Number(args.operability ?? 0);
+  const bankability = Number(args.bankability ?? 0);
+  const risk = Number(args.risk ?? 50);
+  const readiness = computeReadiness(demand, operability, bankability, risk);
+  const territoryLabel = args.territoryName || "This territory";
+
+  let decision: StakeTveSignal["decision"] = "VALIDATE";
+  if (readiness.overall >= 80) decision = "PRIORITIZE";
+  else if (readiness.overall >= 60) decision = "VALIDATE";
+  else if (readiness.overall >= 40) decision = "CAUTION";
+  else decision = "DEFER";
+
+  const driverPool = [
+    { label: "Market demand", value: demand },
+    { label: "Operability", value: operability },
+    { label: "Bankability", value: bankability },
+    { label: "Risk-adjusted confidence", value: readiness.riskAdjusted },
+  ];
+
+  const keyDrivers = driverPool
+    .filter((item) => item.value >= 60)
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 3)
+    .map((item) => `${item.label} ${Math.round(item.value)}%`);
+
+  const blockers = driverPool
+    .filter((item) => item.value < 50)
+    .sort((a, b) => a.value - b.value)
+    .slice(0, 3)
+    .map((item) => `${item.label} ${Math.round(item.value)}%`);
+
+  const summary =
+    decision === "PRIORITIZE"
+      ? `${territoryLabel} shows strong projected territorial value for immediate stake-in.`
+      : decision === "VALIDATE"
+      ? `${territoryLabel} shows viable projected territorial value, but assumptions should be validated during stake-in.`
+      : decision === "CAUTION"
+      ? `${territoryLabel} has mixed projected territorial value, so stake-in should stay conditional on unresolved assumptions.`
+      : `${territoryLabel} is not yet demonstrating enough projected territorial value for an immediate stake-in commitment.`;
+
+  return {
+    score: readiness.overall,
+    band: readiness.band,
+    decision,
+    summary,
+    keyDrivers,
+    blockers,
   };
 }
 

@@ -1,4 +1,228 @@
 {
-  "indexes": [],
+  "indexes": [
+    { "collectionGroup": "subscriptions", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "citizenId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "currentPeriodEnd", "order": "ASCENDING" }
+      ]},
+    { "collectionGroup": "subscriptions", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]},
+    { "collectionGroup": "subscriptions", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "escrowStatus", "order": "ASCENDING" },
+        { "fieldPath": "updatedAt", "order": "DESCENDING" }
+      ]},
+
+    { "collectionGroup": "escrow", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "citizenId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]},
+    { "collectionGroup": "escrow", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]},
+    { "collectionGroup": "escrowEvents", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "cycleId", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "DESCENDING" }
+      ]},
+    { "collectionGroup": "escrowEvents", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "settlementId", "order": "ASCENDING" }
+      ]},
+
+    { "collectionGroup": "serviceCycles", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "subscriptionId", "order": "ASCENDING" },
+        { "fieldPath": "cycleNumber", "order": "ASCENDING" }
+      ]},
+    { "collectionGroup": "serviceCycles", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "citizenId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]},
+    { "collectionGroup": "serviceCycles", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "scheduledAt", "order": "DESCENDING" }
+      ]},
+    { "collectionGroup": "serviceCycles", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "acceptance.autoAcceptAt", "order": "ASCENDING" }
+      ]},
+    { "collectionGroup": "serviceCycles", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "settledAt", "order": "DESCENDING" }
+      ]},
+
+    { "collectionGroup": "settlements", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "emittedAt", "order": "DESCENDING" }
+      ]},
+    { "collectionGroup": "settlements", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "cycleId", "order": "ASCENDING" }
+      ]},
+    { "collectionGroup": "settlements", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "emittedAt", "order": "ASCENDING" }
+      ]},
+
+    { "collectionGroup": "settlementPayouts", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]},
+    { "collectionGroup": "settlementPipelines", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "state", "order": "ASCENDING" },
+        { "fieldPath": "updatedAt", "order": "DESCENDING" }
+      ]},
+
+    { "collectionGroup": "serviceProofs", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "subscriptionId", "order": "ASCENDING" },
+        { "fieldPath": "collectedAt", "order": "DESCENDING" }
+      ]},
+    { "collectionGroup": "serviceProofs", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "cycleId", "order": "ASCENDING" }
+      ]},
+
+    { "collectionGroup": "subscriptionOffers", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "updatedAt", "order": "DESCENDING" }
+      ]},
+    { "collectionGroup": "subscriptionOffers", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "communeId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "planTypeId", "order": "ASCENDING" }
+      ]},
+    { "collectionGroup": "subscriptionOffers", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "communeId", "order": "ASCENDING" },
+        { "fieldPath": "businessModelScenarioId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]},
+
+    { "collectionGroup": "approvalRequests", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "offerId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]},
+
+    { "collectionGroup": "businessModelScenarios", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "communeId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "validationStatus", "order": "ASCENDING" },
+        { "fieldPath": "updatedAt", "order": "DESCENDING" }
+      ]},
+
+    { "collectionGroup": "collectorRoutes", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "collectorId", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" }
+      ]},
+
+    { "collectionGroup": "collectorIncidents", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "reportedAt", "order": "DESCENDING" }
+      ]},
+
+    { "collectionGroup": "disputes", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]},
+    { "collectionGroup": "disputes", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "citizenId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]},
+
+    { "collectionGroup": "bins", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "citizenId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]},
+    { "collectionGroup": "bins", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]},
+    { "collectionGroup": "bags", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "collectedAt", "order": "DESCENDING" }
+      ]},
+
+      { "collectionGroup": "tveRuns", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "clusterId", "order": "ASCENDING" },
+        { "fieldPath": "computedAt", "order": "DESCENDING" }
+      ]},
+    { "collectionGroup": "tveRuns", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "stakeId", "order": "ASCENDING" },
+        { "fieldPath": "computedAt", "order": "DESCENDING" }
+      ]},
+    { "collectionGroup": "recalibrations", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "tveRunId", "order": "ASCENDING" },
+        { "fieldPath": "computedAt", "order": "DESCENDING" }
+      ]},
+    { "collectionGroup": "recalibrations", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "subscriptionId", "order": "ASCENDING" },
+        { "fieldPath": "periodEnd", "order": "DESCENDING" }
+      ]},
+    { "collectionGroup": "recalibrations", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "clusterId", "order": "ASCENDING" },
+        { "fieldPath": "computedAt", "order": "DESCENDING" }
+      ]},
+      { "collectionGroup": "stakes", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "updatedAt",  "order": "DESCENDING" }
+      ]},
+    { "collectionGroup": "businessModelScenarios", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "communeId",        "order": "ASCENDING" },
+        { "fieldPath": "status",           "order": "ASCENDING" },
+        { "fieldPath": "validationStatus", "order": "ASCENDING" },
+        { "fieldPath": "updatedAt",        "order": "DESCENDING" }
+      ]},
+    { "collectionGroup": "stakeIns", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "scenarioId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt",  "order": "DESCENDING" }
+      ]},
+    { "collectionGroup": "stakeIns", "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt",  "order": "DESCENDING" }
+      ]}
+  ],
   "fieldOverrides": []
 }

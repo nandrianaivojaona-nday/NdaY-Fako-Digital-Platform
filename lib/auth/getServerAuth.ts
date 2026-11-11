@@ -11,7 +11,7 @@ export async function getServerAuth() {
   if (!session) return null
 
   try {
-    const decoded = await adminAuth.verifyIdToken(session)
+    const decoded = await adminAuth.verifySessionCookie(session, true)
 
     return {
       uid: decoded.uid,

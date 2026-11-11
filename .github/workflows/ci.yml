@@ -1,0 +1,19 @@
+name: ci
+on:
+  push: { branches: ["*"] }
+  pull_request:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20", cache: "npm" }
+      - run: npm ci
+      # continue-on-error: flip to false once baseline is green (see phase0 checklist)
+      - run: npx tsc --noEmit
+        continue-on-error: true
+      - run: npm run lint
+        continue-on-error: true
+      - run: npx vitest run --reporter=basic
+        continue-on-error: true

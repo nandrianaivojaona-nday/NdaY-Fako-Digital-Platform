@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, getDocs } from "firebase/firestore";
 import { getAuthClient, getDb } from "@/lib/firebase/firebaseApp";
+import Link from "next/link";
 
 export default function AdminPage() {
   const [loading, setLoading] = useState(true);
@@ -51,6 +52,9 @@ export default function AdminPage() {
     <div>
       <h1>Admin</h1>
       <p>{operators.length} operators loaded</p>
+      <Link href="/admin/settlement/payouts" className="mt-6 inline-block rounded-lg bg-teal-700 px-5 py-3 font-semibold text-white">
+        Manage operator payouts
+      </Link>
     </div>
   );
 }

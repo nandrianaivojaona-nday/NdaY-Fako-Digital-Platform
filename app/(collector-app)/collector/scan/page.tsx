@@ -76,3 +76,25 @@ export default function CollectorScanPage() {
     </div>
   );
 }
+async function verifySubscription(citizenId: string): Promise<{
+  ok: boolean;
+  reason?: string;
+  subscriptionId?: string;
+}> {
+  try {
+    const res = await fetch(
+      `/api/app/collector/verify-subscription?citizenId=${encodeURIComponent(citizenId)}`,
+      { credentials: "include" }
+    );
+    if (!res.ok) {
+      return { ok: false, reason: "Unable to verify subscription" };
+    }
+    const data = await res.json();
+    if (!data.active) {
+      return { ok: false, reason: "No active subscription for this household" };
+    }
+    return { ok: true, subscriptionId: data.subscriptionId };
+  } catch {
+    return { ok: false, reason: "Verification error" };
+  }
+}

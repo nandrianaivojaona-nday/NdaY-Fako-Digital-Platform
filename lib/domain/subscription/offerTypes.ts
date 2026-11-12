@@ -128,6 +128,7 @@ export interface TerritorialSubscriptionOfferVersion {
   baseline?: {
     micsReference?: string;
     territoryId?: string;
+      configVersionId?: string;
     tveProfileVersionId?: string;
     businessModelScenarioId?: string;
     stakeInScenarioId?: string;

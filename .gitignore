@@ -63,3 +63,8 @@ Thumbs.db
 firebase-debug.log
 firestore-debug.log
 *-debug.log
+.env*
+.phase*-backup-*
+.fix-audit-*
+.phase2b-fixes-*
+NdaY*.csv

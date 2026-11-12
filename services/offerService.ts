@@ -13,6 +13,7 @@ import {
 } from "@/lib/domain/subscription/offerStateMachine";
 import { logOfferEvent } from "./eventLogService";
 import { getScenario } from "./businessModelService";
+import { getOperatorTerritoryValidation } from "./operatorTerritoryValidationService";
 
 function db() { return getFirestore(getAdminApp()); }
 
@@ -38,6 +39,25 @@ export async function createOfferFromScenario(input: {
         `Cannot create offers from scenario in validation status ${scenario.validationStatus}. ` +
         `Only GO scenarios can produce offers.`
       );
+    }
+
+    // Gate 3 — operator must be validated for this scenario's territory
+    const validation = await getOperatorTerritoryValidation(input.operatorId, scenario.clusterId);
+    if (!validation?.validated) {
+      throw new Error(
+        `Operator not validated for territory ${scenario.clusterId}. ` +
+        `Stake-in must pass assessment and be promoted before offer creation.`
+      );
+    }
+    // Load campaign to get the locked config version
+    const campSnap = await db().collection("campaigns").doc(validation.campaignId).get();
+    if (!campSnap.exists) throw new Error("Campaign not found");
+    const camp = campSnap.data()!;
+    const configVersionId = String(camp.currentConfigVersionId ?? "");
+    if (!configVersionId) throw new Error("Campaign config must be LOCKED before offer creation");
+    const vSnap = await db().collection("campaignConfigVersions").doc(configVersionId).get();
+    if (!vSnap.exists || vSnap.data()!.status !== "LOCKED") {
+      throw new Error("Campaign config version is not LOCKED");
     }
   
     const proposal = scenario.planProposals.find((p) => p.planTypeId === input.planTypeId);
@@ -109,6 +129,7 @@ export async function createOfferFromScenario(input: {
       baseline: {
         micsReference: scenario.clusterId,
         territoryId: scenario.clusterId,
+        configVersionId,
         businessModelScenarioId: scenario.id,
         viability: {
           tbi: scenario.viability.tbi.tbi,

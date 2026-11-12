@@ -9,6 +9,7 @@ import { getOffer, getOfferVersion } from "./offerService";
 import { createEscrow } from "./escrowService";
 import { resolveHoldType } from "./paymentService";
 import { scheduleCyclesForSubscription, transitionCycle } from "./serviceCycleService";
+import { getOperatorTerritoryValidation } from "./operatorTerritoryValidationService";
 
 function db() { return getFirestore(getAdminApp()); }
 
@@ -61,6 +62,23 @@ async function createSubscriptionFromOfferUnlocked(input: {
   const version = await getOfferVersion(offer.activeVersionId);
   if (!version) throw new Error("Active version not found");
 
+  // Gate 4 — operator validated for this offer's territory
+  const territoryId = version.baseline?.territoryId;
+  if (!territoryId) throw new Error("Offer version has no territoryId");
+  const validation = await getOperatorTerritoryValidation(offer.operatorId, territoryId);
+  if (!validation?.validated) {
+    throw new Error("Service not yet available: operator not validated for this territory");
+  }
+
+  // Gate 4b — citizen territory matches the validated territory
+  const userSnap = await db().collection("users").doc(input.citizenId).get();
+  const citizen = userSnap.data();
+  if (!citizen?.fokontanyId) throw new Error("Citizen territory not set — complete your profile");
+  if (citizen.fokontanyId !== validation.fokontanyId) {
+    throw new Error("Service not yet available in your area");
+  }
+
+
   const commercial = version.commercial;
   const amountMGA =
     commercial.monthlyPriceMGA ?? commercial.contractPriceMGA ?? commercial.perPickupPriceMGA ?? 0;
@@ -108,7 +126,15 @@ async function createSubscriptionFromOfferUnlocked(input: {
   const sub: Subscription = { id: subRef.id, ...snapshot, createdAt: now, updatedAt: now };
   await subRef.set(sub);
 
-  return { subscription: sub, escrowId: escrow.id };
+    // Chain fields — for quarantine/combine policy (Phase 2b)
+  await subRef.update({
+    territoryId: validation.territoryId,
+    configVersionId: validation.configVersionId,
+    fokontanyId: validation.fokontanyId,
+    quarantined: false,
+    legacy: false,
+  });
+return { subscription: sub, escrowId: escrow.id };
 }
 
 async function acquireSubscriptionCreationLock(citizenId: string): Promise<string> {

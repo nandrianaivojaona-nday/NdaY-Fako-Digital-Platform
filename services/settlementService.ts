@@ -51,6 +51,17 @@ export async function emitSettlementEntitlement(cycleId: string): Promise<Settle
     acceptanceStatus: cycle.acceptance?.status ?? "AUTO_ACCEPTED",
   });
 
+  // Phase 2b — combine policy snapshot
+  record.assumptions.territoryIdSnapshot = sub.territoryId;
+  record.assumptions.configVersionIdSnapshot = sub.configVersionId;
+  if (sub.territoryId) {
+    const validationDoc = await dbRef.collection(collections.operatorTerritoryValidations)
+      .doc(`${cycle.operatorId}_${sub.territoryId}`).get();
+    if (validationDoc.exists) {
+      record.assumptions.validationValidatedAtSnapshot = validationDoc.get("validatedAt");
+    }
+  }
+
   await dbRef.collection(collections.settlements).doc(record.id).set(record);
   return record;
 }

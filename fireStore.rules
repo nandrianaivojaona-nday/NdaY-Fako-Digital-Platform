@@ -108,6 +108,16 @@ service cloud.firestore {
       allow write: if false;
     }
 
+
+    // ============================================
+    // PHASE 2 PREREQ — operator territory validation (server-write-only)
+    // ============================================
+    match /operatorTerritoryValidations/{validationId} {
+      allow read: if isAdminLike()
+        || (isOperator() && resource.data.operatorId == request.auth.token.get('operatorId', ''));
+      allow write: if false;
+    }
+
     // ============================================
     // DEFAULT DENY
     // ============================================

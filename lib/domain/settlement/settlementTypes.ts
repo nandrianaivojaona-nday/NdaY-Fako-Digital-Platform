@@ -31,6 +31,10 @@ export interface SettlementSplit {
       escrowId: string;
       acceptanceMethod: string;
       acceptanceStatus: string;
+      // Combine policy — validation snapshot at settle time
+      territoryIdSnapshot?: string;
+      configVersionIdSnapshot?: string;
+      validationValidatedAtSnapshot?: number;
     };
     rawNdaYFeeMGA: number;
     rawPaymentCostMGA: number;

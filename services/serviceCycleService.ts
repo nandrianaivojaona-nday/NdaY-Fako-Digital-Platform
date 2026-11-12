@@ -55,6 +55,21 @@ export async function scheduleCyclesForSubscription(input: {
     if (subscriptionDoc.get("cancellationPending") === true) {
       throw new Error("Subscription cancellation is in progress");
     }
+    // Phase 2b — quarantine gate
+    if (subscriptionDoc.get("quarantined") === true) {
+      throw new Error("Subscription is quarantined pending operator validation");
+    }
+    // Phase 2b — combine gate (live validation)
+    const territoryId = subscriptionDoc.get("territoryId") as string | undefined;
+    if (territoryId) {
+      const validationDoc = await tx.get(
+        dbRef.collection(collections.operatorTerritoryValidations).doc(`${input.operatorId}_${territoryId}`)
+      );
+      if (!validationDoc.exists || validationDoc.get("validated") !== true) {
+        throw new Error("Operator validation revoked — cycle scheduling blocked pending admin resolution");
+      }
+    }
+
     const cycleDocs = await Promise.all(refs.map((ref) => tx.get(ref)));
     for (let i = 0; i < actualCycles; i++) {
       const entry = schedule[i];

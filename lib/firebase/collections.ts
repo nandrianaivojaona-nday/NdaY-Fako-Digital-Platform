@@ -76,6 +76,7 @@ export const collections = {
     // But we add the reference for clarity
     citizenAffordability: "citizenAffordability",  // optional — for future cross-referencing
 
+    operatorTerritoryValidations: "operatorTerritoryValidations",
     stakes: "stakes",
     stakeIns: "stakeIns",
     tveRuns: "tveRuns",
